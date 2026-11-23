@@ -24,9 +24,9 @@ Goal: a minimal, publishable library to prove it can be consumed from another pr
 - [x] `README.md` (based on the reference), `AGENTS.md`, `.gitignore`, `LICENSE` (MIT, same as the reference)
 - [x] Builds and passes tests on JDK 8, 11 and 17
 - [x] Consumed from a separate local Maven project (`mvn install` + dependency) — works
-- [ ] First commit and push to GitHub
-- [ ] Tag `v0.1.0` and confirm the build is green on https://jitpack.io/#DdxAiLab/tailwind-merge-java
-- [ ] Consume `v0.1.0` from the real target project through JitPack
+- [x] First commit and push to GitHub
+- [x] Tag `v0.1.0` and confirm the build is green on https://jitpack.io/#DdxAiLab/tailwind-merge-java
+- [x] Consume `v0.1.0` from the real target project through JitPack
 
 ## Step 1 — Models and constants
 
