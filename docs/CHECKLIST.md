@@ -50,13 +50,14 @@ Reference: `src/Common/Validators.cs` (246 lines), `tests/ValidatorsTests.cs` (5
 - [x] `common/Validators.java` (public, `Predicate<String>` constants: `IS_NUMBER`, `IS_FRACTION`, `IS_ARBITRARY_*`, `IS_TSHIRT_SIZE`, `IS_PERCENT`, …)
 - [x] `common/ValidatorsTest.java` — all 222 cases ported (plus Java-specific extras)
 
-## Step 3 — Theme keys and theme getter
+## Step 3 — Theme keys and theme getter ✅
 
 Reference: `src/Common/ThemeKeys.cs`, `src/Common/ThemeGetter.cs`, `tests/ThemeTests.cs`
 
-- [ ] `ThemeKeys.java`
-- [ ] `ThemeGetter` / `ThemeUtility.fromTheme(...)`
-- [ ] `ThemeTest.java`
+- [x] `common/ThemeKeys.java` (19 keys, e.g. `ThemeKeys.FONT_WEIGHT`)
+- [x] `common/ThemeGetter.java` (functional interface) and `common/ThemeUtility.fromTheme(...)`
+- [x] `common/ThemeUtilityTest.java` — tests for `fromTheme` and the key values
+- [ ] Deferred: the cases of `ThemeTests.cs` need later steps. `ThemeKeys_MatchDefaultThemeKeys` → Step 4.14 (needs `TwMergeConfig`); the three `Merge_With*Theme*` theories → Step 8 (need `TwMerge`, `Extend` and `Override`), as `ThemeTest.java`
 
 ## Step 4 — Default configuration (`TwMergeConfig`)
 
@@ -166,3 +167,4 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | Regex flags | Every `Pattern` uses `UNIX_LINES` + `UNICODE_CHARACTER_CLASS` (+ `CASE_INSENSITIVE`/`UNICODE_CASE` where C# has `IgnoreCase`); matching uses `find()` | Mirrors .NET: only `\n` is a line terminator (`$`, `.`), and `\d`/`\w`/`\b` are Unicode-aware |
 | Number parsing | Own parser (regex + `Double.valueOf`) instead of `Double.parseDouble` directly | `parseDouble` accepts `1d`, `1f`, `0x1p3`; .NET `double.TryParse(NumberStyles.Float, Invariant)` does not. `NaN` is not recognized (never accepted by `IS_NUMBER`/`IS_INTEGER` anyway); `Infinity` is a number but not an integer, as in C# |
 | Validator naming | `Validators.IS_*` constants (`IsAny` → `IS_ANY`) | Follows the constants-as-`Predicate` decision above |
+| `ThemeGetter` type | Dedicated `@FunctionalInterface` (`List<Object> apply(Map<String, List<Object>>)`) instead of `Function` | Class group definitions are `Object`s; the map factory must tell a theme getter from a `Predicate` validator (C# uses `is ThemeGetter`) |
