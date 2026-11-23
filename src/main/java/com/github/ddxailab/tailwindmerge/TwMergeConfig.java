@@ -41,6 +41,7 @@ public class TwMergeConfig {
         LayoutClassGroups.addTo(classGroups);
         FlexboxGridClassGroups.addTo(classGroups);
         SizingClassGroups.addTo(classGroups);
+        TypographyClassGroups.addTo(classGroups);
         conflictingClassGroups = new LinkedHashMap<>();
         conflictingClassGroupModifiers = new LinkedHashMap<>();
         postfixLookupClassGroups = new LinkedHashSet<>();
