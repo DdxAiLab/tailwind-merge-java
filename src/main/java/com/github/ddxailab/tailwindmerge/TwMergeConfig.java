@@ -47,6 +47,7 @@ public class TwMergeConfig {
         EffectsClassGroups.addTo(classGroups);
         FiltersClassGroups.addTo(classGroups);
         TablesTransitionsTransformsClassGroups.addTo(classGroups);
+        InteractivityClassGroups.addTo(classGroups);
         conflictingClassGroups = new LinkedHashMap<>();
         conflictingClassGroupModifiers = new LinkedHashMap<>();
         postfixLookupClassGroups = new LinkedHashSet<>();
