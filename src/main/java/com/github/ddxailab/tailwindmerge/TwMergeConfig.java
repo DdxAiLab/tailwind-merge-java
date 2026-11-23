@@ -44,6 +44,7 @@ public class TwMergeConfig {
         TypographyClassGroups.addTo(classGroups);
         BackgroundsClassGroups.addTo(classGroups);
         BordersClassGroups.addTo(classGroups);
+        EffectsClassGroups.addTo(classGroups);
         conflictingClassGroups = new LinkedHashMap<>();
         conflictingClassGroupModifiers = new LinkedHashMap<>();
         postfixLookupClassGroups = new LinkedHashSet<>();
