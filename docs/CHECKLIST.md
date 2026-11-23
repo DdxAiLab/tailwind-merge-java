@@ -70,7 +70,7 @@ Reference: `src/TwMergeConfig.cs` (2,729 lines). Split in sub-steps; check each 
 - [x] 4.4 Class groups: Sizing (≈832–917) — 13 groups in `SizingClassGroups.java`; IDs and order checked against the C# source; test `SizingClassGroupsTest`
 - [x] 4.5 Class groups: Typography (≈917–1173) — 37 groups in `TypographyClassGroups.java`; IDs and order checked against the C# source; test `TypographyClassGroupsTest`
 - [x] 4.6 Class groups: Backgrounds (≈1173–1269) — 14 groups in `BackgroundsClassGroups.java`; IDs and order checked against the C# source; test `BackgroundsClassGroupsTest`
-- [ ] 4.7 Class groups: Borders (≈1269–1523)
+- [x] 4.7 Class groups: Borders (≈1269–1523) — 48 groups in `BordersClassGroups.java`; IDs and order checked against the C# source (base class name and scale also compared for the 41 `id/base/scale` groups); test `BordersClassGroupsTest`
 - [ ] 4.8 Class groups: Effects (≈1523–1740)
 - [ ] 4.9 Class groups: Filters (≈1740–1896)
 - [ ] 4.10 Class groups: Tables, Transitions and Animation, Transforms (≈1896–2128)
