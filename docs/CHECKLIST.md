@@ -42,13 +42,13 @@ Reference: `src/Common/Constants.cs`, `src/Models/*`
 - [x] `ExtendedConfig` → `model/ExtendedConfig.java` (public POJO with getters/setters)
 - [x] Unit tests: `ClassNameNodeTest`, `model/ClassGroupTest`
 
-## Step 2 — Validators
+## Step 2 — Validators ✅
 
 Reference: `src/Common/Validators.cs` (246 lines), `tests/ValidatorsTests.cs` (518 lines)
 
-- [ ] Translate every regex (`Regex` → `java.util.regex.Pattern`, precompiled `static final`); check .NET vs Java regex differences (named groups, `\d`, `\w`, RegexOptions)
-- [ ] `Validators.java` (is-number, is-fraction, is-arbitrary-value/length/size/…, is-tshirt-size, is-percent, …)
-- [ ] `ValidatorsTest.java` — all cases ported
+- [x] Translate every regex (`Regex` → `java.util.regex.Pattern`, precompiled `static final`); check .NET vs Java regex differences (named groups, `\d`, `\w`, RegexOptions)
+- [x] `common/Validators.java` (public, `Predicate<String>` constants: `IS_NUMBER`, `IS_FRACTION`, `IS_ARBITRARY_*`, `IS_TSHIRT_SIZE`, `IS_PERCENT`, …)
+- [x] `common/ValidatorsTest.java` — all 222 cases ported (plus Java-specific extras)
 
 ## Step 3 — Theme keys and theme getter
 
@@ -163,3 +163,6 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | Class group definitions | `Object` varargs: `String`, `Predicate<String>`, theme getter or nested `ClassGroup` | Same heterogeneous model as the C# `object[]`. Lambdas/method refs cannot be passed as `Object`, so validators are exposed as `static final Predicate<String>` constants (Step 2) |
 | Collections | `List`/`Map`/`Set` instead of arrays/`Dictionary`/`HashSet`; `ClassGroup.getDefinitions()` is unmodifiable | Idiomatic Java; theme scales are `Map<String, List<Object>>` |
 | Cache | In-house thread-safe LRU | Keep the library dependency-free |
+| Regex flags | Every `Pattern` uses `UNIX_LINES` + `UNICODE_CHARACTER_CLASS` (+ `CASE_INSENSITIVE`/`UNICODE_CASE` where C# has `IgnoreCase`); matching uses `find()` | Mirrors .NET: only `\n` is a line terminator (`$`, `.`), and `\d`/`\w`/`\b` are Unicode-aware |
+| Number parsing | Own parser (regex + `Double.valueOf`) instead of `Double.parseDouble` directly | `parseDouble` accepts `1d`, `1f`, `0x1p3`; .NET `double.TryParse(NumberStyles.Float, Invariant)` does not. `NaN` is not recognized (never accepted by `IS_NUMBER`/`IS_INTEGER` anyway); `Infinity` is a number but not an integer, as in C# |
+| Validator naming | `Validators.IS_*` constants (`IsAny` → `IS_ANY`) | Follows the constants-as-`Predicate` decision above |
