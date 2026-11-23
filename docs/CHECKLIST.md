@@ -73,7 +73,7 @@ Reference: `src/TwMergeConfig.cs` (2,729 lines). Split in sub-steps; check each 
 - [x] 4.7 Class groups: Borders (≈1269–1523) — 48 groups in `BordersClassGroups.java`; IDs and order checked against the C# source (base class name and scale also compared for the 41 `id/base/scale` groups); test `BordersClassGroupsTest`
 - [x] 4.8 Class groups: Effects (≈1523–1740) — 67 groups (shadows, rings, opacity, blend modes, masks) in `EffectsClassGroups.java`; IDs and order checked against the C# source (base class name and scale also compared for the 49 single-scale groups); test `EffectsClassGroupsTest`
 - [x] 4.9 Class groups: Filters (≈1740–1896) — 21 groups in `FiltersClassGroups.java`; IDs and order checked against the C# source; test `FiltersClassGroupsTest` (every group is asserted by shape: number, bare + number, blur scale, none + arbitrary, drop shadow)
-- [ ] 4.10 Class groups: Tables, Transitions and Animation, Transforms (≈1896–2128)
+- [x] 4.10 Class groups: Tables, Transitions and Animation, Transforms (≈1896–2128) — 36 groups (6 + 6 + 24) in `TablesTransitionsTransformsClassGroups.java`, one private method per section; IDs and order checked against the C# source (base class name and scale also compared for the 20 single-scale groups); test `TablesTransitionsTransformsClassGroupsTest`
 - [ ] 4.11 Class groups: Interactivity (≈2128–2411)
 - [ ] 4.12 Class groups: SVG, Accessibility (≈2411–2600)
 - [ ] 4.13 Conflicting class groups, conflicting class group modifiers, postfix lookup groups, order-sensitive modifiers
