@@ -25,6 +25,12 @@ class TwMergeConfigTest {
     }
 
     @Test
+    void defaultConfigHasAllTheReferenceClassGroups() {
+        // The reference initializes ClassGroups with 378 entries and none of its IDs is repeated.
+        assertEquals(378, new TwMergeConfig().getClassGroups().size());
+    }
+
+    @Test
     void defaultThemeHasTheReferenceScales() {
         TwMergeConfig config = new TwMergeConfig();
 
