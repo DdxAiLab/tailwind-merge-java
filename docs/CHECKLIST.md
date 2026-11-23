@@ -28,17 +28,17 @@ Goal: a minimal, publishable library to prove it can be consumed from another pr
 - [x] Tag `v0.1.0` and confirm the build is green on https://jitpack.io/#DdxAiLab/tailwind-merge-java
 - [x] Consume `v0.1.0` from the real target project through JitPack
 
-## Step 1 — Models and constants
+## Step 1 — Models and constants ✅
 
 Reference: `src/Common/Constants.cs`, `src/Models/*`
 
-- [ ] `Constants` → `common/Constants.java`
-- [ ] `ClassValidator` (delegate) → functional interface `ClassValidator` (`Predicate<String>`-like)
-- [ ] `ClassGroup` → `model/ClassGroup.java` (a group definition is a mix of strings, validators and nested maps)
-- [ ] `ClassModifiersInfo` → `model/ClassModifiersInfo.java` (immutable value class, replaces the C# tuple)
-- [ ] `ClassNameNode` → `model/ClassNameNode.java` (trie node used by the class map)
-- [ ] `ExtendedConfig` → `model/ExtendedConfig.java` (can wait for Step 7)
-- [ ] Unit tests for the data structures
+- [x] `Constants` → `Constants.java` (package-private, root package)
+- [x] `ClassValidator` (class ID + validator pair) → `ClassValidator.java`; the validator itself is a `Predicate<String>`
+- [x] `ClassGroup` → `model/ClassGroup.java` (public; `ClassGroup.of(...)` / `ClassGroup.withBase(base, ...)`)
+- [x] `ClassModifiersInfo` → `ClassModifiersInfo.java` (immutable, replaces the C# record struct)
+- [x] `ClassNameNode` → `ClassNameNode.java` (trie node used by the class map)
+- [x] `ExtendedConfig` → `model/ExtendedConfig.java` (public POJO with getters/setters)
+- [x] Unit tests: `ClassNameNodeTest`, `model/ClassGroupTest`
 
 ## Step 2 — Validators
 
@@ -54,7 +54,6 @@ Reference: `src/Common/ThemeKeys.cs`, `src/Common/ThemeGetter.cs`, `tests/ThemeT
 
 - [ ] `ThemeKeys.java`
 - [ ] `ThemeGetter` / `ThemeUtility.fromTheme(...)`
-- [ ] Decide the Java type for theme scales (`Map<String, Object[]>` → `Map<String, List<Object>>`), see [Decisions](#decisions)
 - [ ] `ThemeTest.java`
 
 ## Step 4 — Default configuration (`TwMergeConfig`)
@@ -157,5 +156,8 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | Dependencies | None at runtime; JUnit 5 for tests | C# uses `Planetarium.LruCacheNet` and `Microsoft.Extensions.Options`; neither is needed in Java |
 | `null` results | `merge` returns `""` instead of `null` | Idiomatic Java; avoids NPEs in consumers (C# returns `null`) |
 | Internals visibility | Package-private classes + tests in the same package | Replaces C# `InternalsVisibleTo` |
-| Theme scale type | *to decide in Step 3* | C# uses `Dictionary<string, object[]>`; probably `Map<String, List<Object>>` |
+| Theme scale type | `Map<String, List<Object>>` | C# uses `Dictionary<string, object[]>` |
+| Internal types | `ClassNameNode`, `ClassModifiersInfo`, `ClassValidator`, `Constants` (and later `TwMergeContext`, `TwMergeMapFactory`) live package-private in the root package | C# `internal` spans several namespaces; Java package-private cannot span sub-packages. Only public API types go in sub-packages (`model`, `common`) |
+| Class group definitions | `Object` varargs: `String`, `Predicate<String>`, theme getter or nested `ClassGroup` | Same heterogeneous model as the C# `object[]`. Lambdas/method refs cannot be passed as `Object`, so validators are exposed as `static final Predicate<String>` constants (Step 2) |
+| Collections | `List`/`Map`/`Set` instead of arrays/`Dictionary`/`HashSet`; `ClassGroup.getDefinitions()` is unmodifiable | Idiomatic Java; theme scales are `Map<String, List<Object>>` |
 | Cache | In-house thread-safe LRU | Keep the library dependency-free |
