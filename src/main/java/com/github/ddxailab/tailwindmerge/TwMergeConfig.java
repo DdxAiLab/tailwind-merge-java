@@ -38,6 +38,7 @@ public class TwMergeConfig {
         cacheSize = 500;
         theme = createDefaultTheme();
         classGroups = new LinkedHashMap<>(378);
+        LayoutClassGroups.addTo(classGroups);
         conflictingClassGroups = new LinkedHashMap<>();
         conflictingClassGroupModifiers = new LinkedHashMap<>();
         postfixLookupClassGroups = new LinkedHashSet<>();

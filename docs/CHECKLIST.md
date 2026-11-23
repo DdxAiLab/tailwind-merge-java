@@ -65,7 +65,7 @@ Reference: `src/Common/ThemeKeys.cs`, `src/Common/ThemeGetter.cs`, `tests/ThemeT
 Reference: `src/TwMergeConfig.cs` (2,729 lines). Split in sub-steps; check each section against the reference before moving on.
 
 - [x] 4.1 Skeleton: fields (`cacheSize` default 500, `prefix`, `theme`, `classGroups`, `conflictingClassGroups`, `conflictingClassGroupModifiers`, `postfixLookupClassGroups`, `orderSensitiveModifiers`), constructor, theme getters and helper scales (lines 1–285) — `TwMergeConfig.java` (public; default theme with its 19 keys, the other maps/sets start empty), `DefaultConfigScales.java` (package-private: theme getters + shared scales), tests `TwMergeConfigTest`, `ThemeTest`
-- [ ] 4.2 Class groups: Layout (≈285–520)
+- [x] 4.2 Class groups: Layout (≈285–520) — 37 groups in `LayoutClassGroups.java` (package-private, `addTo(Map)` called from the `TwMergeConfig` constructor; IDs and order checked against the C# source), test `LayoutClassGroupsTest`
 - [ ] 4.3 Class groups: Flexbox and Grid (≈520–832)
 - [ ] 4.4 Class groups: Sizing (≈832–917)
 - [ ] 4.5 Class groups: Typography (≈917–1173)
