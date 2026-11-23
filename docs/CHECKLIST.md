@@ -4,6 +4,7 @@ Reference: `docs/references/tailwind-merge-dotnet/` (≈3,800 lines of C# in `sr
 
 **How to work through it**
 
+- Read the [development guide](DEVELOPMENT.md) first (build, conventions, C# → Java notes).
 - One step = one branch/commit series. Do not start a step before the previous one builds and its tests pass (`mvn clean verify`).
 - Port each C# class together with its tests (same cases, same expected strings).
 - When a step is done, tick its boxes here and record any deviation under [Decisions](#decisions).
@@ -22,6 +23,7 @@ Goal: a minimal, publishable library to prove it can be consumed from another pr
 - [x] `jitpack.yml`
 - [x] Minimal utility: `TwMerge.merge(String...)` (joins class names, normalizes whitespace) + tests
 - [x] `README.md` (based on the reference), `AGENTS.md`, `.gitignore`, `LICENSE` (MIT, same as the reference)
+- [x] `docs/DEVELOPMENT.md` development guide, referenced from `README.md` and `AGENTS.md`
 - [x] Builds and passes tests on JDK 8, 11 and 17
 - [x] Consumed from a separate local Maven project (`mvn install` + dependency) — works
 - [x] First commit and push to GitHub

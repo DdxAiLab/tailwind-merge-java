@@ -59,6 +59,7 @@ String classes = twMerge.merge("px-2 py-1", "bg-red-500");
 
 ## Get Started
 
+- [Development guide](docs/DEVELOPMENT.md)
 - [Conversion checklist](docs/CHECKLIST.md)
 - What is it for *(coming soon)*
 - Features *(coming soon)*
@@ -72,7 +73,7 @@ String classes = twMerge.merge("px-2 py-1", "bg-red-500");
 mvn clean verify
 ```
 
-Requires Maven and JDK 8 or newer.
+Requires Maven and JDK 8 or newer. See the [development guide](docs/DEVELOPMENT.md) for the project layout, conventions and release process.
 
 ## License
 
