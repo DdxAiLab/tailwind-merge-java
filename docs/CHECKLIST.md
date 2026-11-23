@@ -57,13 +57,14 @@ Reference: `src/Common/ThemeKeys.cs`, `src/Common/ThemeGetter.cs`, `tests/ThemeT
 - [x] `common/ThemeKeys.java` (19 keys, e.g. `ThemeKeys.FONT_WEIGHT`)
 - [x] `common/ThemeGetter.java` (functional interface) and `common/ThemeUtility.fromTheme(...)`
 - [x] `common/ThemeUtilityTest.java` — tests for `fromTheme` and the key values
-- [ ] Deferred: the cases of `ThemeTests.cs` need later steps. `ThemeKeys_MatchDefaultThemeKeys` → Step 4.14 (needs `TwMergeConfig`); the three `Merge_With*Theme*` theories → Step 8 (need `TwMerge`, `Extend` and `Override`), as `ThemeTest.java`
+- [x] `ThemeKeys_MatchDefaultThemeKeys` ported in Step 4.1 as `ThemeTest.themeKeysMatchDefaultThemeKeys` (the default theme already exists there)
+- [ ] Deferred: the three `Merge_With*Theme*` theories of `ThemeTests.cs` → Step 8 (need `TwMerge`, `Extend` and `Override`), to be added to `ThemeTest.java`
 
 ## Step 4 — Default configuration (`TwMergeConfig`)
 
 Reference: `src/TwMergeConfig.cs` (2,729 lines). Split in sub-steps; check each section against the reference before moving on.
 
-- [ ] 4.1 Skeleton: fields (`cacheSize` default 500, `prefix`, `theme`, `classGroups`, `conflictingClassGroups`, `conflictingClassGroupModifiers`, `postfixLookupClassGroups`, `orderSensitiveModifiers`), constructor, theme getters and helper scales (lines 1–285)
+- [x] 4.1 Skeleton: fields (`cacheSize` default 500, `prefix`, `theme`, `classGroups`, `conflictingClassGroups`, `conflictingClassGroupModifiers`, `postfixLookupClassGroups`, `orderSensitiveModifiers`), constructor, theme getters and helper scales (lines 1–285) — `TwMergeConfig.java` (public; default theme with its 19 keys, the other maps/sets start empty), `DefaultConfigScales.java` (package-private: theme getters + shared scales), tests `TwMergeConfigTest`, `ThemeTest`
 - [ ] 4.2 Class groups: Layout (≈285–520)
 - [ ] 4.3 Class groups: Flexbox and Grid (≈520–832)
 - [ ] 4.4 Class groups: Sizing (≈832–917)
@@ -167,4 +168,6 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | Regex flags | Every `Pattern` uses `UNIX_LINES` + `UNICODE_CHARACTER_CLASS` (+ `CASE_INSENSITIVE`/`UNICODE_CASE` where C# has `IgnoreCase`); matching uses `find()` | Mirrors .NET: only `\n` is a line terminator (`$`, `.`), and `\d`/`\w`/`\b` are Unicode-aware |
 | Number parsing | Own parser (regex + `Double.valueOf`) instead of `Double.parseDouble` directly | `parseDouble` accepts `1d`, `1f`, `0x1p3`; .NET `double.TryParse(NumberStyles.Float, Invariant)` does not. `NaN` is not recognized (never accepted by `IS_NUMBER`/`IS_INTEGER` anyway); `Infinity` is a number but not an integer, as in C# |
 | Validator naming | `Validators.IS_*` constants (`IsAny` → `IS_ANY`) | Follows the constants-as-`Predicate` decision above |
+| Default config layout | `TwMergeConfig` (public) builds the theme and delegates to package-private section helpers; the shared theme getters and scales live in `DefaultConfigScales` as `static final Object[]` / `ThemeGetter` constants, and `DefaultConfigScales.concat(...)` replaces the C# spread `[.. scale]` | They are immutable and stateless, so one shared copy is enough; each section class stays well under the 64 KB method limit. A scale passed next to other arguments would be nested, hence `concat` |
+| Config collections | `postfixLookupClassGroups` and `orderSensitiveModifiers` are `Set<String>`; `conflictingClassGroups(Modifiers)` are `Map<String, List<String>>`; maps keep insertion order (`LinkedHashMap`/`LinkedHashSet`) | `HashSet<string>` / `string[]` in C#; ordering mirrors `Dictionary` enumeration |
 | `ThemeGetter` type | Dedicated `@FunctionalInterface` (`List<Object> apply(Map<String, List<Object>>)`) instead of `Function` | Class group definitions are `Object`s; the map factory must tell a theme getter from a `Predicate` validator (C# uses `is ThemeGetter`) |
