@@ -87,16 +87,18 @@ Reference: `src/TwMergeMapFactory.cs`, `tests/ClassMapFactoryTests.cs` (399 line
 - [x] `TwMergeMapFactory.create(config)` → builds the `ClassNameNode` trie — `TwMergeMapFactory.java` (package-private; string, validator (`Predicate`), `ThemeGetter` and nested `ClassGroup` definitions, same as the reference; root map sized 168)
 - [x] `ClassMapFactoryTest.java` — the 168 first-node entries of the reference were generated from the C# test (not retyped) and match, plus the root checks (no group id, only the `container-named` validator)
 
-## Step 6 — Context (modifier splitting and group lookup)
+## Step 6 — Context (modifier splitting and group lookup) ✅
 
 Reference: `src/TwMergeContext.cs` (263 lines)
 
-- [ ] `getClassGroupId(className)`
-- [ ] `getConflictingClassGroupIds(classGroupId, hasPostfixModifier)`
-- [ ] `isPostfixLookupClassGroup(classGroupId)`
-- [ ] `splitModifiers(className)` (variants, `!` important modifier, postfix `/`, arbitrary values with brackets, prefix handling)
-- [ ] `sortModifiers(modifiers)` (respects order-sensitive modifiers)
-- [ ] Tests: `ModifiersTest`, `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest`
+- [x] `TwMergeContext.java` (package-private): copies what it needs from the config (class map, prefix, conflicts, postfix lookup groups, order-sensitive modifiers), so later changes to the config have no effect
+- [x] `getClassGroupId(className)`
+- [x] `getConflictingClassGroupIds(classGroupId, hasPostfixModifier)`
+- [x] `isPostfixLookupClassGroup(classGroupId)`
+- [x] `splitModifiers(className)` (variants, `!` important modifier (trailing and legacy leading), postfix `/`, arbitrary values with brackets and parentheses, prefix handling → `isExternal`)
+- [x] `sortModifiers(modifiers)` (respects order-sensitive modifiers)
+- [x] `TwMergeContextTest` — 37 unit tests of the context itself (group lookup incl. negative values and arbitrary properties, conflicts, splitting, prefix, sorting)
+- [ ] Deferred to Step 7 (they call `new TwMerge().merge(...)`): `ModifiersTests` (also needs Step 8 for its `Extend`/`Override` cases), `ImportantModifierTests`, `ArbitraryVariantsTests`, `PseudoVariantsTests`
 
 ## Step 7 — Merge engine and cache
 
@@ -106,7 +108,7 @@ Reference: `src/TwMerge.cs` (166 lines)
 - [ ] `TwMerge(TwMergeConfig)` constructor + default constructor
 - [ ] Real `merge(String...)`: whitespace split, reverse iteration, conflict detection, modifier sorting, result assembly
 - [ ] Replace the scaffold implementation and update `TwMergeTest`
-- [ ] Core tests: `TwMergeTest`, `NonConflictingClassesTest`, `NonTailwindClassesTest`, `WonkyInputsTest`, `StandaloneClassesTest`
+- [ ] Core tests: `TwMergeTest`, `NonConflictingClassesTest`, `NonTailwindClassesTest`, `WonkyInputsTest`, `StandaloneClassesTest`, plus the ones deferred from Step 6: `ModifiersTest` (default-config cases), `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest`
 
 ## Step 8 — Configuration extension
 
@@ -172,3 +174,6 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | Config collections | `postfixLookupClassGroups` and `orderSensitiveModifiers` are `Set<String>`; `conflictingClassGroups(Modifiers)` are `Map<String, List<String>>`; maps keep insertion order (`LinkedHashMap`/`LinkedHashSet`) | `HashSet<string>` / `string[]` in C#; ordering mirrors `Dictionary` enumeration |
 | Config verification tool | `tools/config-check/` (Bash + Python 3 + a small Java dumper) is kept in the repository; it is not part of the artifact and Maven does not build it. `.gitattributes` forces LF on `*.sh` | The default config has ~450 entries that cannot be compared by eye; the tool dumps both configurations to one normalized format and diffs them, so a future change or a reference update is checked in seconds. Python is only needed by maintainers, never by consumers (the runtime stays dependency-free) |
 | `ThemeGetter` type | Dedicated `@FunctionalInterface` (`List<Object> apply(Map<String, List<Object>>)`) instead of `Function` | Class group definitions are `Object`s; the map factory must tell a theme getter from a `Predicate` validator (C# uses `is ThemeGetter`) |
+| Context results | `TwMergeContext.getClassGroupId` returns `null` for "no group" (like `ClassNameNode`); `getConflictingClassGroupIds` returns an empty list instead of `null`; `sortModifiers` always returns a new `List` | Internal API; an empty list avoids the null checks and covers the C# spread of a `null` conflicts array (`hasPostfixModifier` with modifier conflicts but no regular conflicts), which would throw there |
+| Arbitrary property without colon | `[foo]` resolves to no class group | The C# `arbitraryPropertyClassName[..IndexOf(':')]` throws `ArgumentOutOfRangeException` when there is no `:`; upstream tailwind-merge (JS) yields no group |
+| Modifier sort order | Natural `String` order (UTF-16) instead of the culture-sensitive `List<string>.Sort()` | The sorted modifiers are only used to build a conflict key, so any deterministic order gives the same merge result; matches upstream JS `sort()` |
