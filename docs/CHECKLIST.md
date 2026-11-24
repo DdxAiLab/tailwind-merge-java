@@ -80,12 +80,12 @@ Reference: `src/TwMergeConfig.cs` (2,729 lines). Split in sub-steps; check each 
 - [x] 4.14 Verify the number of groups/keys against the C# config (count them in both) — a missing group is a silent bug. Counts (C# = Java): 19 theme keys, 378 class groups, 49 conflicting class groups, 1 conflicting modifier, 1 postfix lookup group, 12 order-sensitive modifiers, `CacheSize` 500; pinned in `TwMergeConfigTest.defaultConfigMatchesTheReferenceCounts`. Beyond the counts, the whole config was compared definition by definition: the C# constructor was parsed (scales and `..` spreads expanded) and the Java config dumped, both to the same normalized text (451 lines: base class names, nested groups, validators, theme getters and order), and the two dumps are identical; three mutated copies of the Java dump were each flagged by the diff. The comparison is kept as a reusable tool: `tools/config-check/` (`bash tools/config-check/verify-default-config.sh`, see its `README.md`)
 - [x] Tip: split the Java config into several package-private helper classes (one per section) to avoid a 2,700-line file and the JVM 64 KB method limit in the constructor — done: `TwMergeConfig` only builds the theme and calls `LayoutClassGroups`, `FlexboxGridClassGroups`, `SizingClassGroups`, `TypographyClassGroups`, `BackgroundsClassGroups`, `BordersClassGroups`, `EffectsClassGroups`, `FiltersClassGroups`, `TablesTransitionsTransformsClassGroups`, `InteractivityClassGroups`, `SvgAccessibilityClassGroups` and `DefaultConflicts`
 
-## Step 5 — Class map factory
+## Step 5 — Class map factory ✅
 
 Reference: `src/TwMergeMapFactory.cs`, `tests/ClassMapFactoryTests.cs` (399 lines)
 
-- [ ] `TwMergeMapFactory.create(config)` → builds the `ClassNameNode` trie
-- [ ] `ClassMapFactoryTest.java`
+- [x] `TwMergeMapFactory.create(config)` → builds the `ClassNameNode` trie — `TwMergeMapFactory.java` (package-private; string, validator (`Predicate`), `ThemeGetter` and nested `ClassGroup` definitions, same as the reference; root map sized 168)
+- [x] `ClassMapFactoryTest.java` — the 168 first-node entries of the reference were generated from the C# test (not retyped) and match, plus the root checks (no group id, only the `container-named` validator)
 
 ## Step 6 — Context (modifier splitting and group lookup)
 
