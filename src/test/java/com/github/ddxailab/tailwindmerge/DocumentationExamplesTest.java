@@ -77,6 +77,18 @@ class DocumentationExamplesTest {
     }
 
     @Test
+    void featuresLegacyBgOpacity() {
+        assertEquals("bg-red-300/50", twMerge.merge("bg-red-300 bg-opacity-50"));
+        assertEquals("bg-red-300/50", twMerge.merge("bg-opacity-50 bg-red-300"));
+        assertEquals("bg-blue-500/50", twMerge.merge("bg-red-300 bg-opacity-50 bg-blue-500"));
+        assertEquals("bg-red-300/[0.35]", twMerge.merge("bg-red-300 bg-opacity-[0.35]"));
+        assertEquals("hover:bg-red-300/50", twMerge.merge("hover:bg-red-300 hover:bg-opacity-50"));
+        assertEquals("bg-red-300 hover:bg-opacity-50", twMerge.merge("bg-red-300 hover:bg-opacity-50"));
+        assertEquals("bg-red-300/25", twMerge.merge("bg-red-300/25 bg-opacity-50"));
+        assertEquals("bg-opacity-50", twMerge.merge("bg-opacity-50"));
+    }
+
+    @Test
     void featuresComposition() {
         assertEquals("some-class another-class yet-another-class so-many-classes",
                 twMerge.merge("some-class", "another-class yet-another-class", "so-many-classes"));

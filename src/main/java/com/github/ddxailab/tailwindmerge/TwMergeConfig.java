@@ -25,6 +25,7 @@ import java.util.Set;
 public class TwMergeConfig {
 
     private int cacheSize;
+    private boolean legacyBgOpacity;
     private String prefix;
     private Map<String, List<Object>> theme;
     private Map<String, ClassGroup> classGroups;
@@ -38,6 +39,7 @@ public class TwMergeConfig {
      */
     public TwMergeConfig() {
         cacheSize = 500;
+        legacyBgOpacity = true;
         theme = createDefaultTheme();
         classGroups = new LinkedHashMap<>(378);
         LayoutClassGroups.addTo(classGroups);
@@ -116,6 +118,32 @@ public class TwMergeConfig {
      */
     public void setCacheSize(int cacheSize) {
         this.cacheSize = cacheSize;
+    }
+
+    /**
+     * Tells whether the legacy {@code bg-opacity-*} classes of Tailwind CSS v3 are supported.
+     *
+     * @return {@code true} (the default) if {@code bg-opacity-*} classes do not conflict with the background
+     *         color and are merged into it
+     * @see #setLegacyBgOpacity(boolean)
+     */
+    public boolean isLegacyBgOpacity() {
+        return legacyBgOpacity;
+    }
+
+    /**
+     * Sets whether the legacy {@code bg-opacity-*} classes of Tailwind CSS v3 are supported.
+     *
+     * <p>When enabled, a class like {@code bg-opacity-50} does not remove the background color class; once
+     * the conflicts are resolved, the value is moved into the surviving color class that has the same
+     * modifiers and the {@code bg-opacity-*} class is dropped: {@code bg-red-300 bg-opacity-50} becomes
+     * {@code bg-red-300/50}. When disabled, the behavior is the one of the reference library, where
+     * {@code bg-opacity-50} is just another background color.</p>
+     *
+     * @param legacyBgOpacity {@code true} to support the legacy classes
+     */
+    public void setLegacyBgOpacity(boolean legacyBgOpacity) {
+        this.legacyBgOpacity = legacyBgOpacity;
     }
 
     /**

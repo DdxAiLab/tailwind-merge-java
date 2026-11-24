@@ -78,6 +78,7 @@ Each property has a getter and a setter (`getCacheSize` / `setCacheSize`, ...).
 | Property | Type | Description |
 | --- | --- | --- |
 | `cacheSize` | `int` | Maximum size of the LRU cache used for memoizing results. The default is 500; a value lower than 1 turns the cache off |
+| `legacyBgOpacity` | `boolean` | Whether the legacy `bg-opacity-*` classes (Tailwind CSS v3) are supported: they do not remove the background color and are merged into it as `bg-<color>/<value>`. The default is `true`; see [Features](./features.md#supports-the-legacy-bg-opacity--classes) |
 | `prefix` | `String` | Custom prefix of all the Tailwind CSS generated utility classes |
 | `theme` | `Map<String, List<Object>>` | Theme scales |
 | `classGroups` | `Map<String, ClassGroup>` | Class groups |

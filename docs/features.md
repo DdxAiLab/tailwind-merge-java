@@ -92,6 +92,29 @@ twMerge.merge("p-3! p-4! p-5"); // → "p-4! p-5"
 twMerge.merge("right-2! -inset-x-1!"); // → "-inset-x-1!"
 ```
 
+### Supports the legacy `bg-opacity-*` classes
+
+Tailwind CSS v3 set the opacity of a background color with a separate class. Tailwind CSS v4 removed it in favor
+of the `/<value>` syntax. tailwind-merge-java understands the old classes: they do not remove the background
+color, and once the conflicts are resolved the value is moved into the color that survives.
+
+```java
+twMerge.merge("bg-red-300 bg-opacity-50"); // → "bg-red-300/50"
+twMerge.merge("bg-opacity-50 bg-red-300"); // → "bg-red-300/50" (the order does not matter)
+twMerge.merge("bg-red-300 bg-opacity-50 bg-blue-500"); // → "bg-blue-500/50"
+twMerge.merge("bg-red-300 bg-opacity-[0.35]"); // → "bg-red-300/[0.35]"
+twMerge.merge("hover:bg-red-300 hover:bg-opacity-50"); // → "hover:bg-red-300/50"
+```
+
+- The opacity is only applied to the color that has the **same modifiers**: `bg-red-300 hover:bg-opacity-50`
+  is left as it is, because the opacity only applies on hover.
+- A color that already has its own opacity keeps it, as in Tailwind CSS v3: `bg-red-300/25 bg-opacity-50` →
+  `bg-red-300/25`.
+- Without a background color, the `bg-opacity-*` class is kept: `bg-opacity-50` → `bg-opacity-50`.
+- Only `bg-opacity-*` is supported, not `text-opacity-*`, `border-opacity-*` and the like.
+- It is on by default. To get the behavior of the reference library, where `bg-opacity-50` is just another
+  background color, call `config.setLegacyBgOpacity(false)`.
+
 ### Supports postfix modifiers
 
 ```java
