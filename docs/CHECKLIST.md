@@ -147,10 +147,10 @@ Reference: `tests/*.cs`. Ported with a Node script, kept as `tools/port-tests/` 
 
 ## Step 11 — Release
 
-- [ ] `mvn clean verify` green on JDK 8, 11 and 17
-- [ ] Tag `v1.0.0` (or a `0.x` if behavior is not yet complete) and push
+- [ ] `mvn clean verify` green on JDK 8, 11 and 17 — done on 8 and 17 (901 tests, javadoc jar included); no JDK 11 is installed on the development machine, JitPack builds with `openjdk11` (see `jitpack.yml`), so the JitPack build is the first real run on 11
+- [x] Tag `v0.2.0` and push (`pom.xml` version bumped to match; `v1.0.0` was left for later, the API names added beyond the reference may still change)
 - [ ] JitPack build green; log and artifacts checked
-- [ ] Verified from a clean consumer project (Maven and Gradle)
+- [ ] Verified from a clean consumer project (Maven and Gradle) — pre-release check done locally: the artifact was installed into an isolated Maven repository and consumed from a clean Maven project (`com.github.DdxAiLab:tailwind-merge-java`, Java 8 target, run on JDK 8 and 17): default instance and a custom `ExtendedConfig` both give the expected result. The jar holds 33 classes, no test classes, bytecode version 52. Still pending after the tag: the same check through JitPack, and Gradle (not installed here)
 
 ---
 

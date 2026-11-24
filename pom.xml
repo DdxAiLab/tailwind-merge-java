@@ -7,7 +7,7 @@
     <!-- JitPack publishes this as com.github.DdxAiLab:tailwind-merge-java:<tag> -->
     <groupId>com.github.DdxAiLab</groupId>
     <artifactId>tailwind-merge-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>tailwind-merge-java</name>
