@@ -151,7 +151,7 @@ Reference: `tests/*.cs`. Ported with a Node script, kept as `tools/port-tests/` 
 - [x] Tag `v0.2.0` and push (`pom.xml` version bumped to match; `v1.0.0` was left for later, the API names added beyond the reference may still change)
 - [x] JitPack build green for `v0.2.0` (`BUILD SUCCESS`, exit code 0, 1 min 19 s); the log lists the jar, `-sources.jar`, `-javadoc.jar` and the pom
 - [x] Verified from a clean consumer project: `v0.2.0` was added by the maintainer to another project and its behavior confirmed there (build tool not recorded). Before that, the pre-release check done locally: the artifact installed into an isolated Maven repository and consumed from a clean Maven project (Java 8 target, run on JDK 8 and 17), and again from JitPack with a fresh local repository (JDK 8, 17 and 18). Gradle was not tested by the assistant (not installed on the development machine)
-- [x] Release `0.3.0` prepared (adds the legacy `bg-opacity-*` support, see Decisions; `pom.xml` bumped, 936 tests green on JDK 8, 11 and 17). Tag `v0.3.0` created locally; pushing it and checking the JitPack build and a consumer are the same steps as for `0.2.0`
+- [x] Release `0.3.0` (adds the legacy `bg-opacity-*` support, see Decisions): `pom.xml` bumped, 936 tests green on JDK 8, 11 and 17, `main` and tag `v0.3.0` pushed. JitPack build green (`BUILD SUCCESS`, 29 s; jar, sources, javadoc and pom published) and the artifact consumed from a clean Maven project with a fresh local repository on JDK 8 and 17: `bg-red-300 bg-opacity-50` → `bg-red-300/50`, `bg-opacity-50 bg-red-300 bg-blue-500` → `bg-blue-500/50`, `bg-red-300 hover:bg-opacity-50` unchanged, and `setLegacyBgOpacity(false)` gives the reference behavior
 
 ---
 
