@@ -19,6 +19,24 @@ public final class TwMerge {
     private final TwMergeContext context;
     private final LruCache<String, String> cache;
 
+    /** Holder idiom: the shared instance is created the first time {@link #getDefault()} is called. */
+    private static final class DefaultHolder {
+        static final TwMerge INSTANCE = new TwMerge();
+    }
+
+    /**
+     * Gets a shared instance with the default configuration, created lazily on first use.
+     *
+     * <p>It is the Java counterpart of registering {@code TwMerge} as a singleton in the C# dependency
+     * injection container. Use it when the default configuration is enough; to customize the
+     * configuration create your own instance with {@link #TwMerge(TwMergeConfig)} and share it.</p>
+     *
+     * @return the shared instance; it is thread-safe
+     */
+    public static TwMerge getDefault() {
+        return DefaultHolder.INSTANCE;
+    }
+
     /**
      * Initializes a new instance with the default configuration.
      */

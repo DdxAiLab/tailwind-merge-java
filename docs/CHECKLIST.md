@@ -135,14 +135,15 @@ Reference: `tests/*.cs`. Ported with a Node script, kept as `tools/port-tests/` 
 - [x] `TwMergeTests` — already ported in Step 7/8 as `TwMergeTest`
 - [x] Fix every discrepancy found against the reference — none found: all 325 generated cases passed on the first run (JDK 8 and 17)
 
-## Step 10 — Integration and documentation
+## Step 10 — Integration and documentation ✅
 
-- [ ] Dependency-injection integration: the C# `ServiceCollectionExtensions` has no direct Java equivalent — decide whether to provide a shared default instance (`TwMerge.getDefault()`) and/or a Spring/CDI adapter in a separate artifact
-- [ ] Port docs from `docs/references/tailwind-merge-dotnet/docs/`: what-is-it-for, features, limitations, configuration, api-reference (Java examples)
-- [ ] `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` adapted from the reference
-- [ ] Javadoc for the whole public API; attach a javadoc jar to the build
-- [ ] Update `README.md`: remove the "work in progress" note, replace "coming soon" links, add the Thread-safe LRU cache claim only once implemented
-- [ ] Optional: concurrency stress test and a small benchmark vs. the C# numbers
+- [x] Dependency-injection integration: `TwMerge.getDefault()` (lazily created shared instance, holder idiom) and `TwMergeConfig.createDefault()` (the C# `Default()`). No Spring/CDI adapter: the library stays dependency-free and `docs/configuration.md` shows how to register an instance as a Spring bean
+- [x] Docs ported to `docs/` with Java examples: `what-is-it-for.md`, `features.md`, `limitations.md`, `configuration.md`, `api-reference.md` and the index `docs/README.md`. Every code example of features, limitations, configuration and the README is asserted in `DocumentationExamplesTest`, so the docs cannot drift from the behavior
+- [x] `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` adapted from the reference (Maven/JDK instead of .NET SDK, plus the Java-8 and faithful-port rules)
+- [x] Javadoc for the whole public API: `javadoc -Xdoclint:all` reports no warning on JDK 8 and 17; `package-info.java` added to the three packages; `maven-javadoc-plugin` attaches `*-javadoc.jar` to `mvn verify`
+- [x] `README.md` updated: the "work in progress" note and the "planned"/"coming soon" markers are gone, with a real usage example and links to the docs
+- [x] Concurrency: `TwMergeTest.mergeIsThreadSafe` (8 threads, a cache small enough to evict while they run) and `LruCacheTest`
+- [ ] Optional, not done: a small benchmark vs. the C# numbers
 
 ## Step 11 — Release
 
@@ -178,6 +179,8 @@ Reference: `tests/*.cs`. Ported with a Node script, kept as `tools/port-tests/` 
 | Context results | `TwMergeContext.getClassGroupId` returns `null` for "no group" (like `ClassNameNode`); `getConflictingClassGroupIds` returns an empty list instead of `null`; `sortModifiers` always returns a new `List` | Internal API; an empty list avoids the null checks and covers the C# spread of a `null` conflicts array (`hasPostfixModifier` with modifier conflicts but no regular conflicts), which would throw there |
 | Arbitrary property without colon | `[foo]` resolves to no class group | The C# `arbitraryPropertyClassName[..IndexOf(':')]` throws `ArgumentOutOfRangeException` when there is no `:`; upstream tailwind-merge (JS) yields no group |
 | Config extension API | `extend`/`override` are instance methods on `TwMergeConfig` that mutate it and return `this`; `TwMerge` takes the config in its constructor, with no builder or `Consumer` overload | Mirrors the C# `Extend`/`Override` and `IOptions` usage one to one; an overload taking a `Consumer` would make `new TwMerge(null)` ambiguous and adds nothing |
+| Shared default instance | `TwMerge.getDefault()` returns one lazily created instance with the default configuration; `TwMergeConfig.createDefault()` mirrors `Default()` | Stands in for the singleton registration of `ServiceCollectionExtensions` without adding a dependency. Customized instances are created by the caller and shared by whatever container it uses |
+| Javadoc artifact | `maven-javadoc-plugin` runs in `verify` (and so in the JitPack `install`) and attaches the javadoc jar | IDEs show the API documentation of the dependency |
 | Merge cache | `LruCache` is a synchronized access-ordered `LinkedHashMap`; `cacheSize` < 1 disables caching instead of throwing; the key is the arguments joined with a space, as in C# | Dependency-free and simple; a lock per access is negligible next to a merge. A disabled cache is friendlier than an exception |
 | Whitespace handling | Blank arguments are detected with Unicode whitespace and the class list is split with `\s+` + `UNICODE_CHARACTER_CLASS`; empty parts are skipped | .NET `IsNullOrWhiteSpace`/`\s` are Unicode-aware; Java's default `\s` is ASCII only |
 | Modifier sort order | Natural `String` order (UTF-16) instead of the culture-sensitive `List<string>.Sort()` | The sorted modifiers are only used to build a conflict key, so any deterministic order gives the same merge result; matches upstream JS `sort()` |

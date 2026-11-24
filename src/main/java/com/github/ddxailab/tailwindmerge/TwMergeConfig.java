@@ -249,6 +249,15 @@ public class TwMergeConfig {
     }
 
     /**
+     * Creates a new instance of the {@link TwMergeConfig} class with the default settings.
+     *
+     * @return a {@link TwMergeConfig} instance
+     */
+    public static TwMergeConfig createDefault() {
+        return new TwMergeConfig();
+    }
+
+    /**
      * Extends the current configuration with the values from the provided {@link ExtendedConfig}.
      *
      * <p>Theme scales, class group definitions and conflicts for an ID that already exists are

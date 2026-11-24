@@ -2,10 +2,8 @@
 
 A utility to efficiently merge [Tailwind CSS](https://tailwindcss.com) classes in Java without style conflicts.
 
-> **Status: work in progress.** The project is being ported from [tailwind-merge-dotnet](https://github.com/desmondinho/tailwind-merge-dotnet). At the moment `TwMerge.merge` only joins class names and normalizes whitespace; conflict resolution is added step by step. Follow the progress in the [conversion checklist](docs/CHECKLIST.md).
-
 - Targets Tailwind CSS v4 up to v4.3 (same target as the reference project)
-- Thread-safe LRU caching *(planned)*
+- Thread-safe LRU caching
 - Compatible with Java 8 or newer
 - No runtime dependencies
 
@@ -53,19 +51,27 @@ import com.github.ddxailab.tailwindmerge.TwMerge;
 
 TwMerge twMerge = new TwMerge();
 
-String classes = twMerge.merge("px-2 py-1", "bg-red-500");
-// -> "px-2 py-1 bg-red-500"
+twMerge.merge("px-2 py-1 bg-red hover:bg-dark-red", "p-3 bg-[#B91C1C]");
+// -> "hover:bg-dark-red p-3 bg-[#B91C1C]"
 ```
+
+`TwMerge` is thread-safe, so create it once and share it; `TwMerge.getDefault()` gives a lazily created shared
+instance with the default configuration. To adapt it to a custom Tailwind config see the
+[configuration guide](docs/configuration.md).
 
 ## Get Started
 
-- [Development guide](docs/DEVELOPMENT.md)
-- [Conversion checklist](docs/CHECKLIST.md)
-- What is it for *(coming soon)*
-- Features *(coming soon)*
-- Limitations *(coming soon)*
-- Configuration *(coming soon)*
-- API reference *(coming soon)*
+- [What is it for](docs/what-is-it-for.md)
+- [Features](docs/features.md)
+- [Limitations](docs/limitations.md)
+- [Configuration](docs/configuration.md)
+- [API reference](docs/api-reference.md)
+
+## Contributing
+
+Contributions are always welcome!
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for ways to get started. Please adhere to this project's [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md). The [development guide](docs/DEVELOPMENT.md) describes the project layout, conventions and release process, and the [conversion checklist](docs/CHECKLIST.md) records how the port from the C# reference was done.
 
 ## Building
 
@@ -73,7 +79,7 @@ String classes = twMerge.merge("px-2 py-1", "bg-red-500");
 mvn clean verify
 ```
 
-Requires Maven and JDK 8 or newer. See the [development guide](docs/DEVELOPMENT.md) for the project layout, conventions and release process.
+Requires Maven and JDK 8 or newer.
 
 ## License
 
