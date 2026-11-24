@@ -98,17 +98,18 @@ Reference: `src/TwMergeContext.cs` (263 lines)
 - [x] `splitModifiers(className)` (variants, `!` important modifier (trailing and legacy leading), postfix `/`, arbitrary values with brackets and parentheses, prefix handling → `isExternal`)
 - [x] `sortModifiers(modifiers)` (respects order-sensitive modifiers)
 - [x] `TwMergeContextTest` — 37 unit tests of the context itself (group lookup incl. negative values and arbitrary properties, conflicts, splitting, prefix, sorting)
-- [ ] Deferred to Step 7 (they call `new TwMerge().merge(...)`): `ModifiersTests` (also needs Step 8 for its `Extend`/`Override` cases), `ImportantModifierTests`, `ArbitraryVariantsTests`, `PseudoVariantsTests`
+- [x] Deferred to Step 7 and done there: `ModifiersTest`, `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest` (the `Extend`/`Override` cases of `ModifiersTests` wait for Step 8)
 
-## Step 7 — Merge engine and cache
+## Step 7 — Merge engine and cache ✅
 
 Reference: `src/TwMerge.cs` (166 lines)
 
-- [ ] Thread-safe LRU cache without dependencies (e.g. `LinkedHashMap` access-ordered + synchronization, or a small dedicated class)
-- [ ] `TwMerge(TwMergeConfig)` constructor + default constructor
-- [ ] Real `merge(String...)`: whitespace split, reverse iteration, conflict detection, modifier sorting, result assembly
-- [ ] Replace the scaffold implementation and update `TwMergeTest`
-- [ ] Core tests: `TwMergeTest`, `NonConflictingClassesTest`, `NonTailwindClassesTest`, `WonkyInputsTest`, `StandaloneClassesTest`, plus the ones deferred from Step 6: `ModifiersTest` (default-config cases), `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest`
+- [x] Thread-safe LRU cache without dependencies — `LruCache.java` (package-private; access-ordered `LinkedHashMap` guarded by a lock; capacity < 1 disables it); `LruCacheTest` (4 tests)
+- [x] `TwMerge(TwMergeConfig)` constructor + default constructor (the config is copied into a `TwMergeContext`; the cache size is read once)
+- [x] Real `merge(String...)`: whitespace split (Unicode-aware), reverse iteration, conflict detection, modifier sorting, result assembly
+- [x] Replaced the scaffold implementation and rewrote `TwMergeTest` (reference cases + null/blank handling, cache eviction, cache disabled, config changed after creation, concurrent use from 8 threads)
+- [x] Core tests: `NonConflictingClassesTest`, `NonTailwindClassesTest`, `WonkyInputsTest`, `StandaloneClassesTest`, `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest`, `ModifiersTest` (default-config cases)
+- [ ] Deferred to Step 8 (need `Extend`/`Override`): in `ModifiersTest` the three `Merge_ResolvesFullClassNamesForConfiguredPostfixLookupGroups`/`ExtendedOrderSensitiveModifiers`/`OverriddenOrderSensitiveModifiers` theories (the `...AddedToConfig` variants are already ported, using the config collections directly in place of `Override`); in `TwMergeTest` `ConfigExtendedAfterCreation` and `PostfixLookupClassGroupsExtendedAfterCreation`
 
 ## Step 8 — Configuration extension
 
@@ -176,4 +177,6 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | `ThemeGetter` type | Dedicated `@FunctionalInterface` (`List<Object> apply(Map<String, List<Object>>)`) instead of `Function` | Class group definitions are `Object`s; the map factory must tell a theme getter from a `Predicate` validator (C# uses `is ThemeGetter`) |
 | Context results | `TwMergeContext.getClassGroupId` returns `null` for "no group" (like `ClassNameNode`); `getConflictingClassGroupIds` returns an empty list instead of `null`; `sortModifiers` always returns a new `List` | Internal API; an empty list avoids the null checks and covers the C# spread of a `null` conflicts array (`hasPostfixModifier` with modifier conflicts but no regular conflicts), which would throw there |
 | Arbitrary property without colon | `[foo]` resolves to no class group | The C# `arbitraryPropertyClassName[..IndexOf(':')]` throws `ArgumentOutOfRangeException` when there is no `:`; upstream tailwind-merge (JS) yields no group |
+| Merge cache | `LruCache` is a synchronized access-ordered `LinkedHashMap`; `cacheSize` < 1 disables caching instead of throwing; the key is the arguments joined with a space, as in C# | Dependency-free and simple; a lock per access is negligible next to a merge. A disabled cache is friendlier than an exception |
+| Whitespace handling | Blank arguments are detected with Unicode whitespace and the class list is split with `\s+` + `UNICODE_CHARACTER_CLASS`; empty parts are skipped | .NET `IsNullOrWhiteSpace`/`\s` are Unicode-aware; Java's default `\s` is ASCII only |
 | Modifier sort order | Natural `String` order (UTF-16) instead of the culture-sensitive `List<string>.Sort()` | The sorted modifiers are only used to build a conflict key, so any deterministic order gives the same merge result; matches upstream JS `sort()` |
