@@ -1,18 +1,17 @@
 package com.github.ddxailab.tailwindmerge;
 
+import static com.github.ddxailab.tailwindmerge.TestData.list;
+import static com.github.ddxailab.tailwindmerge.TestData.map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.ddxailab.tailwindmerge.model.ClassGroup;
-import java.util.Collections;
+import com.github.ddxailab.tailwindmerge.model.ExtendedConfig;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/**
- * Port of {@code ModifiersTests.cs}. The cases that build the configuration with {@code Extend} or
- * {@code Override} need Step 8; the ones that only change the configuration collections are here.
- */
+/** Port of {@code ModifiersTests.cs}. */
 class ModifiersTest {
 
     @ParameterizedTest
@@ -53,6 +52,51 @@ class ModifiersTest {
         assertEquals(expected, new TwMerge().merge(classLists));
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "foo-bar foo-bar/baz | foo-bar/baz",
+        "foo-bar/baz foo-bar | foo-bar/baz foo-bar",
+    })
+    void mergeResolvesFullClassNamesForConfiguredPostfixLookupGroups(String classLists, String expected) {
+        ExtendedConfig overrides = postfixLookupFixture();
+        overrides.setPostfixLookupClassGroups(list("base"));
+
+        TwMergeConfig config = new TwMergeConfig();
+        config.override(overrides);
+
+        assertEquals(expected, new TwMerge(config).merge(classLists));
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "a:b:block b:a:inline | a:b:block b:a:inline",
+        "before:after:text-lg after:before:text-lg | before:after:text-lg after:before:text-lg",
+    })
+    void mergeExtendedOrderSensitiveModifiersKeepsDefaultAndAddedModifiers(String classLists, String expected) {
+        ExtendedConfig extension = new ExtendedConfig();
+        extension.setOrderSensitiveModifiers(list("a"));
+
+        TwMergeConfig config = new TwMergeConfig();
+        config.extend(extension);
+
+        assertEquals(expected, new TwMerge(config).merge(classLists));
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "a:b:block b:a:inline | a:b:block b:a:inline",
+        "before:after:text-lg after:before:text-lg | after:before:text-lg",
+    })
+    void mergeOverriddenOrderSensitiveModifiersReplacesDefaultModifiers(String classLists, String expected) {
+        ExtendedConfig overrides = new ExtendedConfig();
+        overrides.setOrderSensitiveModifiers(list("a"));
+
+        TwMergeConfig config = new TwMergeConfig();
+        config.override(overrides);
+
+        assertEquals(expected, new TwMerge(config).merge(classLists));
+    }
+
     @Test
     void mergeOrderSensitiveModifierAddedToConfigKeepsModifierOrder() {
         TwMergeConfig config = new TwMergeConfig();
@@ -67,15 +111,22 @@ class ModifiersTest {
         "foo-bar/baz foo-bar | foo-bar/baz foo-bar",
     })
     void mergePostfixLookupClassGroupAddedToConfigResolvesFullClassNames(String classLists, String expected) {
-        Predicate<String> namedValidator = value -> value.equals("foo-bar/baz");
-
-        // Stands in for Override (Step 8): the two groups replace whatever is under those keys
         TwMergeConfig config = new TwMergeConfig();
-        config.getClassGroups().put("base", ClassGroup.withBase("foo", "bar"));
-        config.getClassGroups().put("named", ClassGroup.of(namedValidator));
-        config.getConflictingClassGroups().put("named", Collections.singletonList("base"));
+        config.override(postfixLookupFixture());
         config.getPostfixLookupClassGroups().add("base");
 
         assertEquals(expected, new TwMerge(config).merge(classLists));
+    }
+
+    /** The "base" and "named" groups shared by the postfix lookup tests (without the lookup group itself). */
+    private static ExtendedConfig postfixLookupFixture() {
+        Predicate<String> namedValidator = value -> value.equals("foo-bar/baz");
+
+        ExtendedConfig config = new ExtendedConfig();
+        config.setClassGroups(map(
+                "base", ClassGroup.withBase("foo", "bar"),
+                "named", ClassGroup.of(namedValidator)));
+        config.setConflictingClassGroups(map("named", list("base")));
+        return config;
     }
 }

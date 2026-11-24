@@ -7,12 +7,14 @@ import static com.github.ddxailab.tailwindmerge.common.Validators.IS_TSHIRT_SIZE
 
 import com.github.ddxailab.tailwindmerge.common.ThemeKeys;
 import com.github.ddxailab.tailwindmerge.model.ClassGroup;
+import com.github.ddxailab.tailwindmerge.model.ExtendedConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -244,5 +246,105 @@ public class TwMergeConfig {
      */
     public void setOrderSensitiveModifiers(Set<String> orderSensitiveModifiers) {
         this.orderSensitiveModifiers = orderSensitiveModifiers;
+    }
+
+    /**
+     * Extends the current configuration with the values from the provided {@link ExtendedConfig}.
+     *
+     * <p>Theme scales, class group definitions and conflicts for an ID that already exists are
+     * appended to the existing ones; new IDs are added. A class group extended with a different base
+     * class name is nested, so each part keeps its own base class name. Postfix lookup class groups
+     * and order-sensitive modifiers are added to the existing ones.</p>
+     *
+     * @param extendedConfig the extended configuration; {@code null} sections are ignored
+     * @return this configuration, to allow chaining
+     */
+    public TwMergeConfig extend(ExtendedConfig extendedConfig) {
+        extendLists(theme, extendedConfig.getTheme());
+        extendClassGroups(extendedConfig.getClassGroups());
+        extendLists(conflictingClassGroups, extendedConfig.getConflictingClassGroups());
+        extendLists(conflictingClassGroupModifiers, extendedConfig.getConflictingClassGroupModifiers());
+
+        if (extendedConfig.getPostfixLookupClassGroups() != null) {
+            postfixLookupClassGroups.addAll(extendedConfig.getPostfixLookupClassGroups());
+        }
+
+        if (extendedConfig.getOrderSensitiveModifiers() != null) {
+            orderSensitiveModifiers.addAll(extendedConfig.getOrderSensitiveModifiers());
+        }
+
+        return this;
+    }
+
+    /**
+     * Overrides the current configuration with the values from the provided {@link ExtendedConfig}.
+     *
+     * <p>Theme scales, class groups and conflicts for an ID replace the existing ones. When postfix
+     * lookup class groups or order-sensitive modifiers are given (even an empty list), they replace
+     * the whole existing set.</p>
+     *
+     * @param extendedConfig the overriding configuration; {@code null} sections are ignored
+     * @return this configuration, to allow chaining
+     */
+    public TwMergeConfig override(ExtendedConfig extendedConfig) {
+        putAll(theme, extendedConfig.getTheme());
+        putAll(classGroups, extendedConfig.getClassGroups());
+        putAll(conflictingClassGroups, extendedConfig.getConflictingClassGroups());
+        putAll(conflictingClassGroupModifiers, extendedConfig.getConflictingClassGroupModifiers());
+
+        if (extendedConfig.getPostfixLookupClassGroups() != null) {
+            postfixLookupClassGroups = new LinkedHashSet<>(extendedConfig.getPostfixLookupClassGroups());
+        }
+
+        if (extendedConfig.getOrderSensitiveModifiers() != null) {
+            orderSensitiveModifiers = new LinkedHashSet<>(extendedConfig.getOrderSensitiveModifiers());
+        }
+
+        return this;
+    }
+
+    private void extendClassGroups(Map<String, ClassGroup> extension) {
+        if (extension == null) {
+            return;
+        }
+
+        for (Map.Entry<String, ClassGroup> entry : extension.entrySet()) {
+            ClassGroup existing = classGroups.get(entry.getKey());
+            ClassGroup added = entry.getValue();
+
+            if (existing == null) {
+                classGroups.put(entry.getKey(), added);
+            } else if (Objects.equals(existing.getBaseClassName(), added.getBaseClassName())) {
+                List<Object> definitions = new ArrayList<>(existing.getDefinitions());
+                definitions.addAll(added.getDefinitions());
+                classGroups.put(entry.getKey(),
+                        ClassGroup.withBase(added.getBaseClassName(), definitions.toArray()));
+            } else {
+                // Different base class names are nested so that each keeps its own
+                classGroups.put(entry.getKey(), ClassGroup.of(existing, added));
+            }
+        }
+    }
+
+    private static <T> void extendLists(Map<String, List<T>> original, Map<String, List<T>> extension) {
+        if (extension == null) {
+            return;
+        }
+
+        for (Map.Entry<String, List<T>> entry : extension.entrySet()) {
+            List<T> merged = new ArrayList<>();
+            List<T> initial = original.get(entry.getKey());
+            if (initial != null) {
+                merged.addAll(initial);
+            }
+            merged.addAll(entry.getValue());
+            original.put(entry.getKey(), merged);
+        }
+    }
+
+    private static <V> void putAll(Map<String, V> original, Map<String, V> replacement) {
+        if (replacement != null) {
+            original.putAll(replacement);
+        }
     }
 }

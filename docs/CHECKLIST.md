@@ -58,7 +58,7 @@ Reference: `src/Common/ThemeKeys.cs`, `src/Common/ThemeGetter.cs`, `tests/ThemeT
 - [x] `common/ThemeGetter.java` (functional interface) and `common/ThemeUtility.fromTheme(...)`
 - [x] `common/ThemeUtilityTest.java` — tests for `fromTheme` and the key values
 - [x] `ThemeKeys_MatchDefaultThemeKeys` ported in Step 4.1 as `ThemeTest.themeKeysMatchDefaultThemeKeys` (the default theme already exists there)
-- [ ] Deferred: the three `Merge_With*Theme*` theories of `ThemeTests.cs` → Step 8 (need `TwMerge`, `Extend` and `Override`), to be added to `ThemeTest.java`
+- [x] The three `Merge_With*Theme*` theories of `ThemeTests.cs` were ported in Step 8 into `ThemeTest.java`
 
 ## Step 4 — Default configuration (`TwMergeConfig`) ✅
 
@@ -109,16 +109,16 @@ Reference: `src/TwMerge.cs` (166 lines)
 - [x] Real `merge(String...)`: whitespace split (Unicode-aware), reverse iteration, conflict detection, modifier sorting, result assembly
 - [x] Replaced the scaffold implementation and rewrote `TwMergeTest` (reference cases + null/blank handling, cache eviction, cache disabled, config changed after creation, concurrent use from 8 threads)
 - [x] Core tests: `NonConflictingClassesTest`, `NonTailwindClassesTest`, `WonkyInputsTest`, `StandaloneClassesTest`, `ImportantModifierTest`, `ArbitraryVariantsTest`, `PseudoVariantsTest`, `ModifiersTest` (default-config cases)
-- [ ] Deferred to Step 8 (need `Extend`/`Override`): in `ModifiersTest` the three `Merge_ResolvesFullClassNamesForConfiguredPostfixLookupGroups`/`ExtendedOrderSensitiveModifiers`/`OverriddenOrderSensitiveModifiers` theories (the `...AddedToConfig` variants are already ported, using the config collections directly in place of `Override`); in `TwMergeTest` `ConfigExtendedAfterCreation` and `PostfixLookupClassGroupsExtendedAfterCreation`
+- [x] The Step 8 cases deferred from here (`Extend`/`Override` theories of `ModifiersTest`, `ConfigExtendedAfterCreation`, `PostfixLookupClassGroupsExtendedAfterCreation`) were ported in Step 8
 
-## Step 8 — Configuration extension
+## Step 8 — Configuration extension ✅
 
 Reference: `TwMergeConfig.cs` lines ≈2600–2729 (extend/override), `src/Models/ExtendedConfig.cs`
 
-- [ ] Extend: theme, class groups, conflicting class groups, conflicting modifiers, postfix lookup groups, order-sensitive modifiers
-- [ ] Override of the same sections
-- [ ] Public API to configure `TwMerge` (builder or `Consumer<TwMergeConfig>`; replaces `IOptions<TwMergeConfig>`)
-- [ ] Tests: `ExtendTest`, `PrefixTest`, `ThemeTest` (extension cases)
+- [x] `TwMergeConfig.extend(ExtendedConfig)`: theme, conflicting class groups and modifier conflicts append to an existing key (or add it); class groups with the same base class name merge their definitions, with different base class names they are nested (`ClassGroup.of(existing, added)`); postfix lookup groups and order-sensitive modifiers are added to the existing sets
+- [x] `TwMergeConfig.override(ExtendedConfig)`: the same sections replace by key; postfix lookup groups and order-sensitive modifiers replace the whole set when given (an empty list clears it). Both return `this` to allow chaining
+- [x] Public API to configure `TwMerge`: `new TwMerge(TwMergeConfig)` (the config object replaces `IOptions<TwMergeConfig>`; no builder or `Consumer` overload is needed)
+- [x] Tests: `ExtendTest`, `PrefixTest`, `ThemeTest` (extension cases), the `Extend`/`Override` cases of `ModifiersTest` and `TwMergeTest`, plus `TwMergeConfigExtensionTest` (unit tests of the semantics on the config itself); `TestData` holds the map/list helpers used to write the C# collection initializers in Java 8
 
 ## Step 9 — Behavior tests (remaining)
 
@@ -177,6 +177,7 @@ Reference: `tests/*.cs`. Tick each file once its Java version passes.
 | `ThemeGetter` type | Dedicated `@FunctionalInterface` (`List<Object> apply(Map<String, List<Object>>)`) instead of `Function` | Class group definitions are `Object`s; the map factory must tell a theme getter from a `Predicate` validator (C# uses `is ThemeGetter`) |
 | Context results | `TwMergeContext.getClassGroupId` returns `null` for "no group" (like `ClassNameNode`); `getConflictingClassGroupIds` returns an empty list instead of `null`; `sortModifiers` always returns a new `List` | Internal API; an empty list avoids the null checks and covers the C# spread of a `null` conflicts array (`hasPostfixModifier` with modifier conflicts but no regular conflicts), which would throw there |
 | Arbitrary property without colon | `[foo]` resolves to no class group | The C# `arbitraryPropertyClassName[..IndexOf(':')]` throws `ArgumentOutOfRangeException` when there is no `:`; upstream tailwind-merge (JS) yields no group |
+| Config extension API | `extend`/`override` are instance methods on `TwMergeConfig` that mutate it and return `this`; `TwMerge` takes the config in its constructor, with no builder or `Consumer` overload | Mirrors the C# `Extend`/`Override` and `IOptions` usage one to one; an overload taking a `Consumer` would make `new TwMerge(null)` ambiguous and adds nothing |
 | Merge cache | `LruCache` is a synchronized access-ordered `LinkedHashMap`; `cacheSize` < 1 disables caching instead of throwing; the key is the arguments joined with a space, as in C# | Dependency-free and simple; a lock per access is negligible next to a merge. A disabled cache is friendlier than an exception |
 | Whitespace handling | Blank arguments are detected with Unicode whitespace and the class list is split with `\s+` + `UNICODE_CHARACTER_CLASS`; empty parts are skipped | .NET `IsNullOrWhiteSpace`/`\s` are Unicode-aware; Java's default `\s` is ASCII only |
 | Modifier sort order | Natural `String` order (UTF-16) instead of the culture-sensitive `List<string>.Sort()` | The sorted modifiers are only used to build a conflict key, so any deterministic order gives the same merge result; matches upstream JS `sort()` |

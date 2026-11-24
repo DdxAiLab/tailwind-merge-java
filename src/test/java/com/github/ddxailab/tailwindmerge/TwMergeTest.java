@@ -1,15 +1,20 @@
 package com.github.ddxailab.tailwindmerge;
 
+import static com.github.ddxailab.tailwindmerge.TestData.list;
+import static com.github.ddxailab.tailwindmerge.TestData.map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.ddxailab.tailwindmerge.model.ClassGroup;
+import com.github.ddxailab.tailwindmerge.model.ExtendedConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -66,13 +71,39 @@ class TwMergeTest {
     }
 
     @Test
-    void mergeConflictsAddedToConfigAfterCreationIgnoresChanges() {
+    void mergeConfigExtendedAfterCreationIgnoresChanges() {
         TwMergeConfig config = new TwMergeConfig();
         TwMerge twMerge = new TwMerge(config);
 
-        config.getConflictingClassGroups().put("m", java.util.Collections.singletonList("h"));
+        ExtendedConfig extension = new ExtendedConfig();
+        extension.setTheme(map("spacing", list((Object) "huge")));
+        extension.setClassGroups(map("shadow", ClassGroup.of("elevated")));
+        extension.setConflictingClassGroups(map("m", list("h")));
+        config.extend(extension);
 
+        assertEquals("p-2 p-huge", twMerge.merge("p-2 p-huge"));
+        assertEquals("elevated shadow-lg", twMerge.merge("elevated shadow-lg"));
         assertEquals("h-4 m-4", twMerge.merge("h-4 m-4"));
+    }
+
+    @Test
+    void mergePostfixLookupClassGroupsExtendedAfterCreationIgnoresChanges() {
+        Predicate<String> namedValidator = value -> value.equals("foo-bar/baz");
+
+        ExtendedConfig overrides = new ExtendedConfig();
+        overrides.setClassGroups(map(
+                "base", ClassGroup.withBase("foo", "bar"),
+                "named", ClassGroup.of(namedValidator)));
+        overrides.setConflictingClassGroups(map("named", list("base")));
+        TwMergeConfig config = new TwMergeConfig();
+        config.override(overrides);
+        TwMerge twMerge = new TwMerge(config);
+
+        ExtendedConfig extension = new ExtendedConfig();
+        extension.setPostfixLookupClassGroups(list("base"));
+        config.extend(extension);
+
+        assertEquals("foo-bar", twMerge.merge("foo-bar/baz foo-bar"));
     }
 
     @Test
