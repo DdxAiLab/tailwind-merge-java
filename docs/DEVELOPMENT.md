@@ -91,8 +91,9 @@ artifact and Maven does not build them.
 | Tool | Command | What it does |
 |---|---|---|
 | [config-check](../tools/config-check/README.md) | `bash tools/config-check/verify-default-config.sh` | Compares the default `TwMergeConfig` with the C# reference definition by definition (class groups, base class names, nested groups, validators, theme getters, conflicts, modifiers, order). Exit code `0` = identical. |
+| [port-tests](../tools/port-tests/README.md) | `node tools/port-tests/gen-tests.js ClassGroups ...` | Generates the Java test class of a C# `*Tests.cs` file made of `[InlineData]` cases, copying the strings from the reference instead of retyping them. Needs only Node.js. |
 
-Requirements: Bash (Git Bash on Windows), Python 3 and a JDK, plus the C# reference cloned in
+Requirements: `config-check` needs Bash (Git Bash on Windows), Python 3 and a JDK; `port-tests` needs Node.js; both need the C# reference cloned in
 `docs/references/`. Run it after any change to the default configuration and whenever the reference is
 updated to a newer Tailwind CSS version: the diff lists exactly what has to be ported. The full description
 (output format, how to read a diff, limits) is in [tools/config-check/README.md](../tools/config-check/README.md).

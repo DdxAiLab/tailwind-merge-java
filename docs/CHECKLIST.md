@@ -120,20 +120,20 @@ Reference: `TwMergeConfig.cs` lines ≈2600–2729 (extend/override), `src/Model
 - [x] Public API to configure `TwMerge`: `new TwMerge(TwMergeConfig)` (the config object replaces `IOptions<TwMergeConfig>`; no builder or `Consumer` overload is needed)
 - [x] Tests: `ExtendTest`, `PrefixTest`, `ThemeTest` (extension cases), the `Extend`/`Override` cases of `ModifiersTest` and `TwMergeTest`, plus `TwMergeConfigExtensionTest` (unit tests of the semantics on the config itself); `TestData` holds the map/list helpers used to write the C# collection initializers in Java 8
 
-## Step 9 — Behavior tests (remaining)
+## Step 9 — Behavior tests (remaining) ✅
 
-Reference: `tests/*.cs`. Tick each file once its Java version passes.
+Reference: `tests/*.cs`. Ported with a Node script, kept as `tools/port-tests/` (see its `README.md`), that reads the `[InlineData]` of each C# theory and writes the Java `@MethodSource` provider, so no case was retyped; the number of generated cases was compared with the number of `InlineData` of each file (they match). `null` expected values become `""` (see Decisions).
 
-- [ ] `ArbitraryPropertiesTests` (74)
-- [ ] `ArbitraryValuesTests` (157)
-- [ ] `ClassGroupsTests` (158)
-- [ ] `ColorsClassesTests` (91)
-- [ ] `ContentUtilitiesTests` (17)
-- [ ] `NegativeValueTests` (39)
-- [ ] `PerSideBorderColorsTests` (17)
-- [ ] `TailwindCssVersionsTests` (327)
-- [ ] `TwMergeTests` (134)
-- [ ] Fix every discrepancy found against the reference (regex semantics, ordering, etc.)
+- [x] `ArbitraryPropertiesTest` (10 cases)
+- [x] `ArbitraryValuesTest` (53)
+- [x] `ClassGroupsTest` (58)
+- [x] `ColorsClassesTest` (19)
+- [x] `ContentUtilitiesTest` (1)
+- [x] `NegativeValueTest` (6)
+- [x] `PerSideBorderColorsTest` (4)
+- [x] `TailwindCssVersionsTest` (174)
+- [x] `TwMergeTests` — already ported in Step 7/8 as `TwMergeTest`
+- [x] Fix every discrepancy found against the reference — none found: all 325 generated cases passed on the first run (JDK 8 and 17)
 
 ## Step 10 — Integration and documentation
 
