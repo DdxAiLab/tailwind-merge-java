@@ -32,6 +32,20 @@ class TwMergeConfigTest {
     }
 
     @Test
+    void defaultConfigMatchesTheReferenceCounts() {
+        // Counts of the C# TwMergeConfig constructor (step 4.14); a missing entry is a silent bug.
+        TwMergeConfig config = new TwMergeConfig();
+
+        assertEquals(500, config.getCacheSize());
+        assertEquals(19, config.getTheme().size());
+        assertEquals(378, config.getClassGroups().size());
+        assertEquals(49, config.getConflictingClassGroups().size());
+        assertEquals(1, config.getConflictingClassGroupModifiers().size());
+        assertEquals(1, config.getPostfixLookupClassGroups().size());
+        assertEquals(12, config.getOrderSensitiveModifiers().size());
+    }
+
+    @Test
     void defaultThemeHasTheReferenceScales() {
         TwMergeConfig config = new TwMergeConfig();
 

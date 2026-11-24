@@ -42,6 +42,8 @@ src/test/java/...       JUnit 5 tests, same package structure as the code
 docs/CHECKLIST.md       Conversion checklist and decisions
 docs/DEVELOPMENT.md     This guide
 docs/references/        Reference projects (C# source and tests)
+tools/                  Development tools (not part of the library, not built by Maven)
+.gitattributes          Keeps *.sh files with LF endings (they must run in Git Bash on Windows)
 ```
 
 Package mapping from the reference:
@@ -62,8 +64,10 @@ Work one checklist step at a time.
 1. Read the C# files of the step and their tests in `docs/references/tailwind-merge-dotnet/`.
 2. Port the code, then port its tests **with the same cases and the same expected strings**. One C# `FooTests.cs` becomes one `FooTest.java`.
 3. Run `mvn clean verify`. A failing ported test is a porting bug until proven otherwise; do not change expected values to make a test pass.
-4. Record any deviation from the reference in the *Decisions* table of `CHECKLIST.md`.
-5. Tick the finished items in `CHECKLIST.md` and commit.
+4. If the step touches the default configuration (class groups, scales, theme, conflicts), run the
+   [config check](#development-tools) and make sure it reports `IDENTICAL`.
+5. Record any deviation from the reference in the *Decisions* table of `CHECKLIST.md`.
+6. Tick the finished items in `CHECKLIST.md` and commit.
 
 ### C# → Java translation notes
 
@@ -78,6 +82,20 @@ Work one checklist step at a time.
 | `Regex` (`[GeneratedRegex]`) | `static final java.util.regex.Pattern` (precompiled); check .NET vs Java differences (named groups syntax, `\d`/`\w` Unicode behavior, `RegexOptions`) |
 | `InternalsVisibleTo` | tests in the same package as the package-private classes |
 | `IOptions<TwMergeConfig>` | plain constructor/builder argument (no DI dependency) |
+
+## Development tools
+
+Scripts that help to port and verify the library live in `tools/`. They are not part of the published
+artifact and Maven does not build them.
+
+| Tool | Command | What it does |
+|---|---|---|
+| [config-check](../tools/config-check/README.md) | `bash tools/config-check/verify-default-config.sh` | Compares the default `TwMergeConfig` with the C# reference definition by definition (class groups, base class names, nested groups, validators, theme getters, conflicts, modifiers, order). Exit code `0` = identical. |
+
+Requirements: Bash (Git Bash on Windows), Python 3 and a JDK, plus the C# reference cloned in
+`docs/references/`. Run it after any change to the default configuration and whenever the reference is
+updated to a newer Tailwind CSS version: the diff lists exactly what has to be ported. The full description
+(output format, how to read a diff, limits) is in [tools/config-check/README.md](../tools/config-check/README.md).
 
 ## Conventions
 
