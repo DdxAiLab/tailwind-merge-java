@@ -2,6 +2,7 @@ package com.github.ddxailab.tailwindmerge;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -51,13 +52,14 @@ class TwMergeConfigTest {
         TwMergeConfig second = new TwMergeConfig();
 
         first.getTheme().put("custom", Arrays.<Object>asList("x"));
-        first.getOrderSensitiveModifiers().add("before");
+        first.getOrderSensitiveModifiers().add("custom");
         first.setPrefix("tw");
         first.setCacheSize(10);
 
         assertNotSame(first.getTheme(), second.getTheme());
         assertEquals(19, second.getTheme().size());
-        assertTrue(second.getOrderSensitiveModifiers().isEmpty());
+        assertEquals(12, second.getOrderSensitiveModifiers().size());
+        assertFalse(second.getOrderSensitiveModifiers().contains("custom"));
         assertNull(second.getPrefix());
         assertEquals(500, second.getCacheSize());
     }

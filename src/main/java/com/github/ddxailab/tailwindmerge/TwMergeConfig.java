@@ -49,10 +49,14 @@ public class TwMergeConfig {
         TablesTransitionsTransformsClassGroups.addTo(classGroups);
         InteractivityClassGroups.addTo(classGroups);
         SvgAccessibilityClassGroups.addTo(classGroups);
-        conflictingClassGroups = new LinkedHashMap<>();
-        conflictingClassGroupModifiers = new LinkedHashMap<>();
+        conflictingClassGroups = new LinkedHashMap<>(49);
+        DefaultConflicts.addConflictingClassGroups(conflictingClassGroups);
+        conflictingClassGroupModifiers = new LinkedHashMap<>(1);
+        DefaultConflicts.addConflictingClassGroupModifiers(conflictingClassGroupModifiers);
         postfixLookupClassGroups = new LinkedHashSet<>();
+        DefaultConflicts.addPostfixLookupClassGroups(postfixLookupClassGroups);
         orderSensitiveModifiers = new LinkedHashSet<>();
+        DefaultConflicts.addOrderSensitiveModifiers(orderSensitiveModifiers);
     }
 
     private static Map<String, List<Object>> createDefaultTheme() {
