@@ -4,6 +4,7 @@ import static com.github.ddxailab.tailwindmerge.common.Validators.IS_ARBITRARY_V
 import static com.github.ddxailab.tailwindmerge.common.Validators.IS_ARBITRARY_VARIABLE;
 import static com.github.ddxailab.tailwindmerge.common.Validators.IS_NUMBER;
 
+import com.github.ddxailab.tailwindmerge.common.ArbitraryValue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * A utility for merging conflicting Tailwind CSS classes.
+ * A utility for merging conflicting Tailwind CSS classes and for parsing single class names.
  *
  * <p>The configuration is copied when the instance is created, so changing it afterwards has no
  * effect. Instances are safe to share between threads.</p>
@@ -106,6 +107,157 @@ public final class TwMerge {
         return result;
     }
 
+    /**
+     * Splits a single class name into its parts, interpreting it as {@link #merge(String...)} does with
+     * the configuration of this instance (prefix, theme and class groups).
+     *
+     * <p>White space around the class is ignored. A class that does not belong to any class group, or
+     * that lacks the configured prefix, is not an error: see {@link ParsedClass#isRecognized()} and
+     * {@link ParsedClass#isExternal()}. The result is not cached.
+     *
+     * @param className the class to parse, e.g. {@code md:hover:bg-red-300/50!}
+     * @return the parts of the class
+     * @throws IllegalArgumentException if {@code className} is {@code null}, is blank or holds more
+     *         than one class
+     */
+    public ParsedClass parse(String className) {
+        String singleClassName = requireSingleClassName(className);
+        ClassModifiersInfo info = context.splitModifiers(singleClassName);
+        Resolution resolution = info.isExternal() ? null : resolve(info);
+
+        String baseClassName = info.getBaseClassName();
+
+        if (resolution == null) {
+            return new ParsedClass(singleClassName, info.getModifiers(), info.hasImportantModifier(),
+                    baseClassName, "", null, null, "", info.isExternal());
+        }
+
+        String modifier = "";
+
+        if (resolution.hasPostfixModifier) {
+            // The position counts the leading "!" of Tailwind CSS v3, which the base class name no
+            // longer has. A trailing "!" takes precedence over a leading one.
+            boolean leadingImportant = info.hasImportantModifier()
+                    && singleClassName.charAt(singleClassName.length() - 1) != Constants.IMPORTANT_MODIFIER;
+            int slash = info.getPostfixModifierPosition() - (leadingImportant ? 1 : 0);
+
+            if (slash < baseClassName.length() - 1
+                    && !context.isSlashPartOfValue(baseClassName, resolution.classGroupId)) {
+                modifier = baseClassName.substring(slash + 1);
+                baseClassName = baseClassName.substring(0, slash);
+            }
+        }
+
+        ArbitraryValue arbitraryValue = null;
+        ParsedClass.ArbitraryProperty arbitraryProperty = null;
+
+        if (resolution.classGroupId.startsWith(TwMergeContext.ARBITRARY_PROPERTY_GROUP_PREFIX)
+                && baseClassName.startsWith("[")) {
+            String name = resolution.classGroupId.substring(TwMergeContext.ARBITRARY_PROPERTY_GROUP_PREFIX.length());
+            // The base class name is "[name:value]"
+            arbitraryProperty = new ParsedClass.ArbitraryProperty(
+                    name, baseClassName.substring(name.length() + 2, baseClassName.length() - 1));
+        } else {
+            arbitraryValue = findArbitraryValue(baseClassName);
+        }
+
+        return new ParsedClass(singleClassName, info.getModifiers(), info.hasImportantModifier(), baseClassName,
+                modifier, arbitraryValue, arbitraryProperty, resolution.classGroupId, false);
+    }
+
+    /** Gets the only class of a string, splitting it on white space as the merge does. */
+    private static String requireSingleClassName(String className) {
+        if (className == null) {
+            throw new IllegalArgumentException("className must not be null");
+        }
+
+        String result = null;
+        if (!isBlank(className)) {
+            for (String part : CLASSES_SEPARATOR.split(className)) {
+                if (part.isEmpty()) {
+                    continue;
+                }
+                if (result != null) {
+                    throw new IllegalArgumentException("className must hold a single class: " + className);
+                }
+                result = part;
+            }
+        }
+
+        if (result == null) {
+            throw new IllegalArgumentException("className must not be blank");
+        }
+        return result;
+    }
+
+    /**
+     * Finds the arbitrary value or variable that ends a base class name, after the first {@code -} that
+     * is followed by {@code [} or {@code (}.
+     *
+     * @return the arbitrary value, or {@code null} if there is none
+     */
+    private static ArbitraryValue findArbitraryValue(String baseClassName) {
+        for (int i = 1; i < baseClassName.length(); i++) {
+            char currChar = baseClassName.charAt(i);
+            if (currChar == '[' || currChar == '(') {
+                return baseClassName.charAt(i - 1) == Constants.CLASS_NAME_SEPARATOR
+                        ? ArbitraryValue.from(baseClassName.substring(i)).orElse(null)
+                        : null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds the class group of a class that has the configured prefix. It is the interpretation shared
+     * by {@link #merge(String...)} and {@link #parse(String)}.
+     *
+     * @return the class group of the class, or {@code null} if it is not a Tailwind class
+     */
+    private Resolution resolve(ClassModifiersInfo info) {
+        String baseClassName = info.getBaseClassName();
+        Integer postfixModifierPosition = info.getPostfixModifierPosition();
+        boolean hasPostfixModifier = postfixModifierPosition != null;
+        String classGroupId;
+
+        String legacyOpacity = legacyBgOpacity && !hasPostfixModifier ? legacyBgOpacityValue(baseClassName) : null;
+
+        if (legacyOpacity != null) {
+            // A class of its own group: it does not conflict with the background color
+            classGroupId = LEGACY_BG_OPACITY_GROUP;
+        } else if (hasPostfixModifier) {
+            String baseClassNameWithoutPostfix = baseClassName.substring(0, postfixModifierPosition);
+            classGroupId = context.getClassGroupId(baseClassNameWithoutPostfix);
+
+            String classGroupIdWithPostfix =
+                    !isNullOrEmpty(classGroupId) && context.isPostfixLookupClassGroup(classGroupId)
+                            ? context.getClassGroupId(baseClassName)
+                            : null;
+            if (!isNullOrEmpty(classGroupIdWithPostfix) && !classGroupIdWithPostfix.equals(classGroupId)) {
+                classGroupId = classGroupIdWithPostfix;
+                hasPostfixModifier = false;
+            }
+        } else {
+            classGroupId = context.getClassGroupId(baseClassName);
+        }
+
+        if (isNullOrEmpty(classGroupId)) {
+            if (!hasPostfixModifier) {
+                return null;
+            }
+
+            classGroupId = context.getClassGroupId(baseClassName);
+
+            if (isNullOrEmpty(classGroupId)) {
+                return null;
+            }
+
+            hasPostfixModifier = false;
+        }
+
+        return new Resolution(classGroupId, hasPostfixModifier, legacyOpacity);
+    }
+
     private String merge(String classList) {
         Set<String> classGroupsInConflict = new HashSet<>();
         String[] classNames = CLASSES_SEPARATOR.split(classList);
@@ -121,55 +273,16 @@ public final class TwMerge {
             }
 
             ClassModifiersInfo info = context.splitModifiers(originalClassName);
+            Resolution resolution = info.isExternal() ? null : resolve(info);
 
-            if (info.isExternal()) {
+            if (resolution == null) {
+                // Not a Tailwind class
                 kept.add(KeptClass.unrelated(originalClassName));
                 continue;
             }
 
-            String baseClassName = info.getBaseClassName();
-            Integer postfixModifierPosition = info.getPostfixModifierPosition();
-            boolean hasPostfixModifier = postfixModifierPosition != null;
-            String classGroupId;
-
-            String legacyOpacity = legacyBgOpacity && !hasPostfixModifier ? legacyBgOpacityValue(baseClassName) : null;
-
-            if (legacyOpacity != null) {
-                // A class of its own group: it does not conflict with the background color
-                classGroupId = LEGACY_BG_OPACITY_GROUP;
-            } else if (hasPostfixModifier) {
-                String baseClassNameWithoutPostfix = baseClassName.substring(0, postfixModifierPosition);
-                classGroupId = context.getClassGroupId(baseClassNameWithoutPostfix);
-
-                String classGroupIdWithPostfix =
-                        !isNullOrEmpty(classGroupId) && context.isPostfixLookupClassGroup(classGroupId)
-                                ? context.getClassGroupId(baseClassName)
-                                : null;
-                if (!isNullOrEmpty(classGroupIdWithPostfix) && !classGroupIdWithPostfix.equals(classGroupId)) {
-                    classGroupId = classGroupIdWithPostfix;
-                    hasPostfixModifier = false;
-                }
-            } else {
-                classGroupId = context.getClassGroupId(baseClassName);
-            }
-
-            if (isNullOrEmpty(classGroupId)) {
-                if (!hasPostfixModifier) {
-                    // Not a Tailwind class
-                    kept.add(KeptClass.unrelated(originalClassName));
-                    continue;
-                }
-
-                classGroupId = context.getClassGroupId(baseClassName);
-
-                if (isNullOrEmpty(classGroupId)) {
-                    // Not a Tailwind class
-                    kept.add(KeptClass.unrelated(originalClassName));
-                    continue;
-                }
-
-                hasPostfixModifier = false;
-            }
+            String classGroupId = resolution.classGroupId;
+            boolean hasPostfixModifier = resolution.hasPostfixModifier;
 
             String variantModifier = String.join(String.valueOf(Constants.MODIFIER_SEPARATOR),
                     context.sortModifiers(info.getModifiers()));
@@ -190,7 +303,8 @@ public final class TwMerge {
             }
 
             // Tailwind class not in conflict
-            kept.add(new KeptClass(originalClassName, modifierId, classGroupId, hasPostfixModifier, legacyOpacity));
+            kept.add(new KeptClass(
+                    originalClassName, modifierId, classGroupId, hasPostfixModifier, resolution.legacyOpacity));
         }
 
         if (legacyBgOpacity) {
@@ -266,6 +380,21 @@ public final class TwMerge {
         return IS_NUMBER.test(value) || IS_ARBITRARY_VALUE.test(value) || IS_ARBITRARY_VARIABLE.test(value)
                 ? value
                 : null;
+    }
+
+    /** The class group of a Tailwind class and how it was found. */
+    private static final class Resolution {
+        final String classGroupId;
+        /** Whether the class group was found treating the {@code /} as a postfix modifier. */
+        final boolean hasPostfixModifier;
+        /** The value of a legacy {@code bg-opacity-*} class, otherwise {@code null}. */
+        final String legacyOpacity;
+
+        Resolution(String classGroupId, boolean hasPostfixModifier, String legacyOpacity) {
+            this.classGroupId = classGroupId;
+            this.hasPostfixModifier = hasPostfixModifier;
+            this.legacyOpacity = legacyOpacity;
+        }
     }
 
     /** A class that survived the conflict resolution, with what is needed to merge legacy opacities. */

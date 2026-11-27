@@ -16,10 +16,10 @@ public final class Validators {
     // case-insensitive ones, UNICODE_CASE) so that they behave like their .NET counterparts: only
     // '\n' is a line terminator and \d, \w and \b are Unicode-aware.
 
-    private static final Pattern ARBITRARY_VALUE =
+    static final Pattern ARBITRARY_VALUE =
             compile("^\\[(?:(\\w[\\w-]*):)?(.+)\\]$", true);
 
-    private static final Pattern ARBITRARY_VARIABLE =
+    static final Pattern ARBITRARY_VARIABLE =
             compile("^\\((?:(\\w[\\w-]*):)?(.+)\\)$", true);
 
     private static final Pattern FRACTION =

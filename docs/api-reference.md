@@ -5,15 +5,16 @@ Reference to all public members of tailwind-merge-java. The full Javadoc is atta
 
 Packages:
 
-- `com.github.ddxailab.tailwindmerge`: `TwMerge`, `TwMergeConfig`
+- `com.github.ddxailab.tailwindmerge`: `TwMerge`, `ParsedClass`, `TwMergeConfig`
 - `com.github.ddxailab.tailwindmerge.model`: `ClassGroup`, `ExtendedConfig`
-- `com.github.ddxailab.tailwindmerge.common`: `ThemeGetter`, `ThemeUtility`, `ThemeKeys`, `Validators`
+- `com.github.ddxailab.tailwindmerge.common`: `ThemeGetter`, `ThemeUtility`, `ThemeKeys`, `Validators`,
+  `ArbitraryValue`
 
 ## `TwMerge`
 
 ```java
 /**
- * A utility for merging conflicting Tailwind CSS classes.
+ * A utility for merging conflicting Tailwind CSS classes and for parsing single class names.
  */
 public final class TwMerge
 ```
@@ -53,7 +54,65 @@ public String merge(String... classNames)
  * @return the shared instance; it is thread-safe
  */
 public static TwMerge getDefault()
+
+/**
+ * Splits a single class name into its parts, interpreting it as merge does with the configuration
+ * of this instance (prefix, theme and class groups).
+ *
+ * @param className the class to parse; white space around it is ignored
+ * @return the parts of the class
+ * @throws IllegalArgumentException if className is null, is blank or holds more than one class
+ */
+public ParsedClass parse(String className)
 ```
+
+## `ParsedClass`
+
+```java
+/**
+ * The parts of a single class name, as merge understands them.
+ */
+public final class ParsedClass
+```
+
+An immutable value created by `TwMerge.parse`. No method returns `null`.
+
+| Method | Description |
+| --- | --- |
+| `String getClassName()` | The parsed class name, without surrounding white space |
+| `List<String> getVariants()` | The variants in the order they are written, arbitrary ones included, without `:` (unmodifiable) |
+| `boolean isImportant()` | Whether it has the important modifier: `p-4!`, or `!p-4` as in Tailwind CSS v3 |
+| `String getBaseClassName()` | Without prefix, variants, important and postfix modifiers; keeps the `-` of a negative value |
+| `boolean isNegative()` | A recognized class whose base class name starts with `-` |
+| `String getModifier()` | The text after the `/` (`bg-red-300/50`, `text-lg/7`), or `""`. The slash of a fraction (`w-1/2`) is not a modifier |
+| `Optional<ArbitraryValue> getArbitraryValue()` | The `[...]` or `(...)` value of the utility (`w-[10px]`, `text-(length:--x)`) |
+| `Optional<ParsedClass.ArbitraryProperty> getArbitraryProperty()` | The declaration of an arbitrary property (`[padding:1rem]`), with `getName()` and `getValue()` |
+| `String getClassGroupId()` | The class group ID (`arbitrary..<property>` for arbitrary properties, `bg-opacity` for the legacy `bg-opacity-*` classes), or `""` |
+| `boolean isRecognized()` | Whether the class belongs to a class group |
+| `boolean isExternal()` | Whether a prefix is configured and the class lacks it |
+
+For a class that is not recognized only the class name, the variants, the important modifier and the base class
+name are filled in. An external class is not interpreted at all: its base class name is the whole class name.
+
+When the leading `!` of Tailwind CSS v3 is combined with a postfix modifier (`!text-lg/7`), `merge` resolves the
+class group with a position that is off by one, as the reference does, and `parse` reports that same group
+(`text-color` instead of `font-size`), or none. The trailing form (`text-lg/7!`) is not affected.
+
+## `ArbitraryValue`
+
+```java
+/**
+ * An arbitrary value ([10px]) or arbitrary variable ((--my-width)) split into its label and value.
+ */
+public final class ArbitraryValue
+```
+
+| Method | Description |
+| --- | --- |
+| `static Optional<ArbitraryValue> from(String text)` | Reads a value with its delimiters; empty if the text is not one |
+| `ArbitraryValue.Syntax getSyntax()` | `BRACKETS` or `PARENTHESES` |
+| `String getLabel()` | The label (`length`, `family-name`, ...) without the colon, or `""` |
+| `String getValue()` | The value as written, without delimiters and label |
 
 ## `TwMergeConfig`
 

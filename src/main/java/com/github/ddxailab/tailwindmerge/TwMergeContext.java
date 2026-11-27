@@ -1,5 +1,6 @@
 package com.github.ddxailab.tailwindmerge;
 
+import com.github.ddxailab.tailwindmerge.common.Validators;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,6 +21,9 @@ import java.util.regex.Pattern;
  * (as long as the validators of the configuration are).
  */
 final class TwMergeContext {
+
+    /** Start of the class group ID of an arbitrary property, followed by the property. */
+    static final String ARBITRARY_PROPERTY_GROUP_PREFIX = "arbitrary..";
 
     private static final Pattern ARBITRARY_PROPERTY =
             Pattern.compile("^\\[(.+)\\]$", Pattern.UNIX_LINES | Pattern.UNICODE_CHARACTER_CLASS);
@@ -59,6 +63,57 @@ final class TwMergeContext {
 
         String classGroupId = getClassGroupIdRecursive(classNameParts, start, classMap);
         return classGroupId != null ? classGroupId : getGroupIdForArbitraryProperty(className);
+    }
+
+    /**
+     * Tells whether the slash of a class name belongs to its value, as in {@code w-1/2}, instead of
+     * introducing a postfix modifier: the class group accepts the text after the last {@code -} as a
+     * literal definition or as a fraction.
+     *
+     * @param className    the base class name, slash included
+     * @param classGroupId the class group of the class
+     * @return {@code true} if the slash is part of the value
+     */
+    boolean isSlashPartOfValue(String className, String classGroupId) {
+        String[] parts = splitClassName(className);
+
+        // Walk to the node of the utility, i.e. every part but the value
+        ClassNameNode node = classMap;
+        for (int i = 0; i < parts.length - 1; i++) {
+            if (!parts[i].isEmpty()) {
+                node = child(node, parts[i]);
+                if (node == null) {
+                    return false;
+                }
+            }
+        }
+
+        String value = parts[parts.length - 1];
+        if (value.indexOf('/') < 0) {
+            return false;
+        }
+
+        ClassNameNode literal = child(node, value);
+        if (literal != null && classGroupId.equals(literal.getClassGroupId())) {
+            return true;
+        }
+
+        if (node.getValidators() == null || !Validators.IS_FRACTION.test(value)) {
+            return false;
+        }
+
+        for (ClassValidator validator : node.getValidators()) {
+            if (validator.getValidator() == Validators.IS_FRACTION
+                    && validator.getClassGroupId().equals(classGroupId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static ClassNameNode child(ClassNameNode node, String part) {
+        return node.getNext() == null ? null : node.getNext().get(part);
     }
 
     /**
@@ -256,7 +311,7 @@ final class TwMergeContext {
                 int colon = arbitraryPropertyClassName.indexOf(':');
                 // The C# code throws when there is no colon ("[foo]"); no group is the sensible answer
                 if (colon >= 0) {
-                    return "arbitrary.." + arbitraryPropertyClassName.substring(0, colon);
+                    return ARBITRARY_PROPERTY_GROUP_PREFIX + arbitraryPropertyClassName.substring(0, colon);
                 }
             }
         }
